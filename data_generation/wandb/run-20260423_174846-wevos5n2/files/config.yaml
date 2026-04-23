@@ -1,0 +1,197 @@
+_current_progress_remaining:
+    value: 1
+_custom_logger:
+    value: "False"
+_episode_num:
+    value: 0
+_last_episode_starts:
+    value: '[ True]'
+_last_obs:
+    value: '[[ 0.01369617 -0.02302133 -0.04590265 -0.04834723]]'
+_last_original_obs:
+    value: None
+_logger:
+    value: <stable_baselines3.common.logger.Logger object at 0x16a6385b0>
+_n_updates:
+    value: 0
+_num_timesteps_at_start:
+    value: 0
+_stats_window_size:
+    value: 100
+_total_timesteps:
+    value: 100000
+_vec_normalize_env:
+    value: None
+_wandb:
+    value:
+        cli_version: 0.26.1
+        e:
+            q34so8rw4xu50g3hdyrs01rg0o66bfj2:
+                apple:
+                    ecpuCores: 4
+                    gpuCores: 20
+                    macModel: Mac16,8
+                    memoryGb: 48
+                    name: Apple M4 Pro
+                    pcpuCores: 10
+                    ramTotalBytes: "51539607552"
+                    swapTotalBytes: "2147483648"
+                codePath: data_generation/train_policies.py
+                codePathLocal: train_policies.py
+                cpu_count: 14
+                cpu_count_logical: 14
+                disk:
+                    /:
+                        total: "494384795648"
+                        used: "107889123328"
+                email: tim.arni@epfl.ch
+                executable: /opt/homebrew/Caskroom/miniconda/base/envs/rl-hw-1/bin/python
+                git:
+                    commit: f59d0e4c9468c43622a43bebdf776953a80a140f
+                    remote: https://github.com/pedropintoo/RL-project
+                host: Tims-MacBook-Pro-2.local
+                memory:
+                    total: "51539607552"
+                os: macOS-26.3.1-arm64-arm-64bit
+                program: /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/train_policies.py
+                python: CPython 3.10.19
+                root: /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation
+                startedAt: "2026-04-23T21:48:46.663508Z"
+                writerId: q34so8rw4xu50g3hdyrs01rg0o66bfj2
+        m: []
+        python_version: 3.10.19
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 2
+                - 13
+                - 16
+                - 22
+            "4": 3.10.19
+            "5": 0.26.1
+            "10":
+                - 20
+            "12": 0.26.1
+            "13": darwin-arm64
+action_noise:
+    value: None
+action_space:
+    value: Discrete(2)
+algo:
+    value: PPO
+batch_size:
+    value: 64
+clip_range:
+    value: FloatSchedule(ConstantSchedule(val=0.2))
+clip_range_vf:
+    value: None
+device:
+    value: cpu
+ent_coef:
+    value: 0
+env:
+    value: <stable_baselines3.common.vec_env.dummy_vec_env.DummyVecEnv object at 0x13fc40af0>
+env_id:
+    value: CartPole-v1
+ep_info_buffer:
+    value: deque([], maxlen=100)
+ep_success_buffer:
+    value: deque([], maxlen=100)
+eval_freq:
+    value: 2000
+expert_return:
+    value: 500
+gae_lambda:
+    value: 0.95
+gamma:
+    value: 0.99
+learning_rate:
+    value: 0.0003
+lr_schedule:
+    value: FloatSchedule(ConstantSchedule(val=0.0003))
+max_episode_steps:
+    value: 500
+max_grad_norm:
+    value: 0.5
+measured_random_return:
+    value: 22.05
+mid_fraction:
+    value: 0.5
+n_envs:
+    value: 1
+n_epochs:
+    value: 10
+n_eval_episodes:
+    value: 10
+n_steps:
+    value: 2048
+normalize_advantage:
+    value: "True"
+num_timesteps:
+    value: 0
+observation_space:
+    value: Box([-4.8               -inf -0.41887903        -inf], [4.8               inf 0.41887903        inf], (4,), float32)
+policy:
+    value: |-
+        ActorCriticPolicy(
+          (features_extractor): FlattenExtractor(
+            (flatten): Flatten(start_dim=1, end_dim=-1)
+          )
+          (pi_features_extractor): FlattenExtractor(
+            (flatten): Flatten(start_dim=1, end_dim=-1)
+          )
+          (vf_features_extractor): FlattenExtractor(
+            (flatten): Flatten(start_dim=1, end_dim=-1)
+          )
+          (mlp_extractor): MlpExtractor(
+            (policy_net): Sequential(
+              (0): Linear(in_features=4, out_features=64, bias=True)
+              (1): Tanh()
+              (2): Linear(in_features=64, out_features=64, bias=True)
+              (3): Tanh()
+            )
+            (value_net): Sequential(
+              (0): Linear(in_features=4, out_features=64, bias=True)
+              (1): Tanh()
+              (2): Linear(in_features=64, out_features=64, bias=True)
+              (3): Tanh()
+            )
+          )
+          (action_net): Linear(in_features=64, out_features=2, bias=True)
+          (value_net): Linear(in_features=64, out_features=1, bias=True)
+        )
+policy_class:
+    value: <class 'stable_baselines3.common.policies.ActorCriticPolicy'>
+policy_kwargs:
+    value: '{}'
+random_return:
+    value: 22
+rollout_buffer:
+    value: <stable_baselines3.common.buffers.RolloutBuffer object at 0x168083cd0>
+rollout_buffer_class:
+    value: <class 'stable_baselines3.common.buffers.RolloutBuffer'>
+rollout_buffer_kwargs:
+    value: '{}'
+sde_sample_freq:
+    value: -1
+seed:
+    value: 0
+start_time:
+    value: 1776980929033252000
+target_kl:
+    value: None
+target_mid:
+    value: 261
+tensorboard_log:
+    value: None
+total_timesteps:
+    value: 100000
+use_sde:
+    value: "False"
+verbose:
+    value: 0
+vf_coef:
+    value: 0.5

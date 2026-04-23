@@ -17,9 +17,9 @@ import numpy as np
 def rollout_trajectory(env, policy, deterministic: bool = False) -> Dict[str, Any]:
     """Run one episode and return the full (state, action, reward) sequence.
 
-    We keep rewards (even though DPO does not need them) because:
+    Rewards are kept (even though DPO does not need them) because:
       * the return R(tau) = sum(rewards) drives the Bradley-Terry label, and
-      * Person 3's reward-model code may want per-step rewards for debugging.
+      * reward-model code may want per-step rewards for debugging.
 
     `policy` is any object exposing a Stable-Baselines3-style
     `predict(obs, deterministic=...)` returning (action, state).
@@ -54,9 +54,8 @@ def rollout_trajectory(env, policy, deterministic: bool = False) -> Dict[str, An
 def bradley_terry_probability(r1: float, r2: float) -> float:
     """P(tau_1 preferred over tau_2) = exp(r1) / (exp(r1) + exp(r2)).
 
-    Implemented as a numerically stable sigmoid of the return difference —
-    naive `exp(r)` overflows for large returns (e.g. CartPole at 500 gives
-    exp(500) ≈ 1.4e217, which already underflows the denominator in float64).
+    Implemented as a numerically stable sigmoid of the return difference,
+    because naive `exp(r)` overflows for large returns.
     """
     # sigmoid(r1 - r2) is algebraically identical to the BT expression.
     diff = r1 - r2

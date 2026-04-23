@@ -1,0 +1,38 @@
+{
+  "os":  "macOS-26.3.1-arm64-arm-64bit",
+  "python":  "CPython 3.10.19",
+  "startedAt":  "2026-04-23T21:48:46.663508Z",
+  "program":  "/Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/train_policies.py",
+  "codePath":  "data_generation/train_policies.py",
+  "codePathLocal":  "train_policies.py",
+  "git":  {
+    "remote":  "https://github.com/pedropintoo/RL-project",
+    "commit":  "f59d0e4c9468c43622a43bebdf776953a80a140f"
+  },
+  "email":  "tim.arni@epfl.ch",
+  "root":  "/Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation",
+  "host":  "Tims-MacBook-Pro-2.local",
+  "executable":  "/opt/homebrew/Caskroom/miniconda/base/envs/rl-hw-1/bin/python",
+  "cpu_count":  14,
+  "cpu_count_logical":  14,
+  "disk":  {
+    "/":  {
+      "total":  "494384795648",
+      "used":  "107889123328"
+    }
+  },
+  "memory":  {
+    "total":  "51539607552"
+  },
+  "apple":  {
+    "name":  "Apple M4 Pro",
+    "ecpuCores":  4,
+    "pcpuCores":  10,
+    "gpuCores":  20,
+    "memoryGb":  48,
+    "swapTotalBytes":  "2147483648",
+    "ramTotalBytes":  "51539607552",
+    "macModel":  "Mac16,8"
+  },
+  "writerId":  "q34so8rw4xu50g3hdyrs01rg0o66bfj2"
+}

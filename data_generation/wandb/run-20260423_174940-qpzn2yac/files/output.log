@@ -1,0 +1,4 @@
+[MidCheckpoint] mean eval return -656.27 >= target -675.00 — saved pi_2 to /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/outputs/policies/Pendulum-v1_mid
+[Expert] saved pi_1 to /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/outputs/policies/Pendulum-v1_expert
+  pi_1 (expert): mean return = -476.71 ± 408.67
+  pi_2 (mid): mean return = -630.74 ± 58.05

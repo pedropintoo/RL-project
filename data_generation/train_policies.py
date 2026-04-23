@@ -1,19 +1,18 @@
 """
 Train the expert (pi_1) and mid-performing (pi_2) policies.
 
-For each environment in `config.ENVIRONMENTS` we:
+For each environment in `config.ENVIRONMENTS`:
   1. Train a single PPO agent end-to-end (this becomes pi_1).
   2. During training, an `EvalCallback` periodically evaluates the policy.
      A custom `MidCheckpointCallback` watches those evaluations and, the
      first time the mean return crosses the halfway mark between random
      and expert performance, dumps the current weights as pi_2.
 
-Why one training run instead of two?
+Only one training run is needed because:
   - It guarantees pi_2 and pi_1 live on the *same learning trajectory*, so
-    pi_2 is genuinely a "less trained" version of pi_1 rather than a
-    different algorithm. This matches the project description: "save a
-    checkpoint during training for a policy pi_2".
-  - It halves compute.
+    pi_2 is a "less trained" version of pi_1 rather than a
+    different algorithm, to match the project description.
+  - Halves compute.
 
 Outputs land in `outputs/policies/<ENV_ID>_{expert,mid}.zip`.
 """
@@ -24,12 +23,16 @@ import argparse
 
 import gymnasium as gym
 import numpy as np
+import wandb
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.callbacks import BaseCallback, EvalCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+from wandb.integration.sb3 import WandbCallback
 
 from config import ENVIRONMENTS, LOG_DIR, POLICY_DIR, TRAIN_SEED, EnvConfig
+
+WANDB_PROJECT = "rl-course-project"
 
 
 ALGO_REGISTRY = {"PPO": PPO, "SAC": SAC}
@@ -109,12 +112,21 @@ def train_one_environment(cfg: EnvConfig, seed: int) -> None:
     train_env = _make_env(cfg.env_id, seed=seed)
     eval_env = _make_env(cfg.env_id, seed=seed + 1_000)
 
+    run = wandb.init(
+        project=WANDB_PROJECT,
+        name=f"{cfg.env_id}-{cfg.algo}-seed{seed}",
+        config={**cfg.__dict__, "seed": seed, "target_mid": target_mid,
+                "measured_random_return": random_ret},
+        sync_tensorboard=True,
+        reinit=True,
+    )
+
     AlgoCls = ALGO_REGISTRY[cfg.algo]
     model = AlgoCls(
         "MlpPolicy",
         train_env,
         seed=seed,
-        verbose=0,
+        verbose=1,
         tensorboard_log=str(LOG_DIR),
     )
 
@@ -132,8 +144,9 @@ def train_one_environment(cfg: EnvConfig, seed: int) -> None:
         callback_after_eval=mid_cb,
         verbose=0,
     )
+    wandb_cb = WandbCallback(verbose=0)
 
-    model.learn(total_timesteps=cfg.total_timesteps, callback=eval_cb)
+    model.learn(total_timesteps=cfg.total_timesteps, callback=[eval_cb, wandb_cb])
     model.save(expert_path)
     print(f"[Expert] saved pi_1 to {expert_path}")
 
@@ -144,6 +157,8 @@ def train_one_environment(cfg: EnvConfig, seed: int) -> None:
             mean, std = evaluate_policy(loaded, eval_env, n_eval_episodes=10,
                                         deterministic=True)
             print(f"  {label}: mean return = {mean:.2f} ± {std:.2f}")
+            wandb.log({f"final/{label}/mean_return": mean,
+                       f"final/{label}/std_return": std})
         except FileNotFoundError:
             print(f"  {label}: NOT FOUND at {path} — "
                   "target return may have been too high; increase "
@@ -151,6 +166,7 @@ def train_one_environment(cfg: EnvConfig, seed: int) -> None:
 
     train_env.close()
     eval_env.close()
+    run.finish()
 
 
 def main():

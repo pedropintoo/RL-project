@@ -1,0 +1,4 @@
+[MidCheckpoint] mean eval return 375.20 >= target 261.00 — saved pi_2 to /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/outputs/policies/CartPole-v1_mid
+[Expert] saved pi_1 to /Users/timarni/Documents/RL_Course_FS_26/RL-project/data_generation/outputs/policies/CartPole-v1_expert
+  pi_1 (expert): mean return = 500.00 ± 0.00
+  pi_2 (mid): mean return = 376.70 ± 188.46

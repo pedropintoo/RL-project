@@ -1,10 +1,9 @@
 """
 Central configuration for the RLHF data-generation pipeline.
 
-All experiment-level knobs live here so that `train_policies.py` and
-`generate_preferences.py` stay short and reproducible. If you want to add
-an environment, tune training length, or change the dataset sizes K,
-this is the only file you need to touch.
+All experiment-level knobs live here. To add a new environment,
+tune training length or change the dataset sizes K, only this
+file needs to be modified.
 """
 
 from dataclasses import dataclass, field
@@ -36,10 +35,10 @@ class EnvConfig:
     eval_freq: int              # env steps between evaluations (used to catch pi_2)
     n_eval_episodes: int = 10   # episodes averaged at each eval
     max_episode_steps: int = 500
-    # Reference returns (used to decide what "mid-performing" means):
+    # Reference returns, used to determine a mid-performing policy:
     #   pi_2 target return = random_return + mid_fraction * (expert_return - random_return)
-    # We do NOT need exact numbers; these are rough anchors. The training
-    # script will also print the true random baseline so you can sanity-check.
+    # No need for exact numbers, these rough anchors are enough. The training
+    # script will print the true random baseline as sanity-check.
     random_return: float = 0.0
     expert_return: float = 0.0
     mid_fraction: float = 0.5
@@ -75,16 +74,15 @@ ENVIRONMENTS: List[EnvConfig] = [
 # ---------------------------------------------------------------------------
 # Preference-dataset configuration
 # ---------------------------------------------------------------------------
-# K = number of (tau_1, tau_2) pairs produced. We generate several sizes so
-# that Persons 2 and 3 can study how DPO / PPO-RLHF scale with dataset size.
+# K = number of (tau_1, tau_2) pairs produced. Several sizes are generated, to
+# study how DPO / PPO-RLHF scales with dataset size.
 DATASET_SIZES: List[int] = [50, 200, 1000]
 
-# Seeds used when rolling out trajectories. We keep them separate from the
-# seeds that Persons 2/3 will use for training their algorithms — the goal
-# here is simply reproducibility of the preference data itself.
-ROLLOUT_SEED: int = 12345
+# Base seed used when rolling out trajectories. The default sweep in
+# generate_preferences.py generates seeds ROLLOUT_SEED, ROLLOUT_SEED+1, ...
+ROLLOUT_SEED: int = 1
 
-# Training seeds — three separate seeds produce three expert checkpoints;
-# this lets you generate more diverse preference data if you want. For
-# simplicity we default to a single training seed.
+# Training seeds, e.g. three separate seeds produce three expert checkpoints;
+# this allows to generate more diverse preference data if wanted. Default is
+# a single training seed.
 TRAIN_SEED: int = 0

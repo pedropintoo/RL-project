@@ -14,8 +14,8 @@ Pipeline per environment and per dataset size K:
   5. Dump everything to JSON (full data) and CSV (summary).
 
 We generate each K independently rather than taking prefixes of the largest
-K — this makes the seed handling explicit and means Persons 2/3 can iterate
-on a small K without touching the large one. If you want monotonic subsets,
+K, because this makes the seed handling explicit and easy to iterate
+on a small K without touching the large one. For monotonic subsets,
 shuffle / truncate the K=max JSON instead.
 """
 
@@ -54,8 +54,17 @@ def load_policies(cfg: EnvConfig):
     return pi1, pi2
 
 
-def build_dataset(cfg: EnvConfig, K: int, seed: int) -> dict:
-    """Create one preference dataset of size K for env `cfg.env_id`."""
+DEFAULT_N_SEEDS = 5
+
+
+def build_dataset(cfg: EnvConfig, K: int, seed: int, base_seed: int) -> dict:
+    """Create one preference dataset of size K for env `cfg.env_id`.
+
+    `seed` is the effective seed used to drive rollouts and labeling; it is
+    typically derived from `base_seed` via a hash of (env_id, K) so that each
+    (env, K, base_seed) slot is independent. `base_seed` is recorded so the
+    sweep slot is identifiable from the JSON alone.
+    """
     env = gym.make(cfg.env_id)
     env.reset(seed=seed)
     env.action_space.seed(seed)
@@ -64,7 +73,8 @@ def build_dataset(cfg: EnvConfig, K: int, seed: int) -> dict:
     rng = np.random.default_rng(seed)
 
     pairs = []
-    for i in tqdm(range(K), desc=f"{cfg.env_id} K={K}", leave=False):
+    for i in tqdm(range(K), desc=f"{cfg.env_id} K={K} base_seed={base_seed}",
+                  leave=False):
         # Use stochastic sampling so repeated rollouts differ.
         tau1 = rollout_trajectory(env, pi1, deterministic=False)
         tau2 = rollout_trajectory(env, pi2, deterministic=False)
@@ -91,6 +101,7 @@ def build_dataset(cfg: EnvConfig, K: int, seed: int) -> dict:
         "env_id": cfg.env_id,
         "K": K,
         "seed": seed,
+        "base_seed": base_seed,
         "policies": {
             "pi1": f"{cfg.env_id}_expert",
             "pi2": f"{cfg.env_id}_mid",
@@ -112,35 +123,47 @@ def main():
                         help="Subset of env_ids (default: all).")
     parser.add_argument("--sizes", nargs="*", type=int, default=None,
                         help="Override dataset sizes (default: config.DATASET_SIZES).")
-    parser.add_argument("--seed", type=int, default=ROLLOUT_SEED)
+    parser.add_argument(
+        "--seeds",
+        nargs="*",
+        type=int,
+        default=None,
+        help=f"Base seeds to sweep over. Default: {DEFAULT_N_SEEDS} consecutive "
+             "seeds starting at config.ROLLOUT_SEED. One dataset per "
+             "(env, K, seed) triple is written.",
+    )
     args = parser.parse_args()
 
     configs = ENVIRONMENTS
     if args.envs:
         configs = [c for c in ENVIRONMENTS if c.env_id in set(args.envs)]
     sizes = args.sizes or DATASET_SIZES
+    seeds = args.seeds if args.seeds else [ROLLOUT_SEED + i
+                                           for i in range(DEFAULT_N_SEEDS)]
 
     for cfg in configs:
         for K in sizes:
-            # Different seed per (env, K) so datasets don't overlap trivially.
-            seed = args.seed + hash((cfg.env_id, K)) % 10_000
-            dataset = build_dataset(cfg, K, seed=seed)
+            for base_seed in seeds:
+                # Derive a unique seed per (env, K, base_seed) so the three
+                # dataset sizes under one base_seed don't trivially overlap.
+                derived = base_seed + hash((cfg.env_id, K)) % 10_000
+                dataset = build_dataset(cfg, K, seed=derived, base_seed=base_seed)
 
-            stem = f"{cfg.env_id}_K{K}"
-            json_path = PREFERENCE_DIR / f"{stem}.json"
-            csv_path = PREFERENCE_DIR / f"{stem}.csv"
+                stem = f"{cfg.env_id}_K{K}_s{base_seed}"
+                json_path = PREFERENCE_DIR / f"{stem}.json"
+                csv_path = PREFERENCE_DIR / f"{stem}.csv"
 
-            save_json(dataset, json_path)
-            save_csv_summary(dataset["pairs"], csv_path)
+                save_json(dataset, json_path)
+                save_csv_summary(dataset["pairs"], csv_path)
 
-            s = dataset["stats"]
-            print(
-                f"[{cfg.env_id} | K={K}] "
-                f"R(pi_1)={s['mean_R_tau1']:.1f}±{s['std_R_tau1']:.1f}, "
-                f"R(pi_2)={s['mean_R_tau2']:.1f}±{s['std_R_tau2']:.1f}, "
-                f"frac τ1 preferred={s['fraction_tau1_preferred']:.2f}  → "
-                f"{json_path.name}, {csv_path.name}"
-            )
+                s = dataset["stats"]
+                print(
+                    f"[{cfg.env_id} | K={K} | seed={base_seed}] "
+                    f"R(pi_1)={s['mean_R_tau1']:.1f}±{s['std_R_tau1']:.1f}, "
+                    f"R(pi_2)={s['mean_R_tau2']:.1f}±{s['std_R_tau2']:.1f}, "
+                    f"frac τ1 preferred={s['fraction_tau1_preferred']:.2f}  → "
+                    f"{json_path.name}"
+                )
 
 
 if __name__ == "__main__":
