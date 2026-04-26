@@ -5,13 +5,15 @@ import torch.nn.functional as F
 from torch import nn
 from torch.distributions import Categorical, Normal
 
-    # state size
-    #   |
-    #   v
-    # hidden size
-    #   |
-    #   v
-    # action size (discrete) or action size * 2 (continuous, mean and std)
+# Simple Policy Network for testing both discrete and continuous action spaces.
+#
+# state size
+#   |
+#   v
+# hidden size
+#   |
+#   v
+# action size (discrete) or action size * 2 (continuous, mean and std)
 
 # [abstract class]
 class Policy(nn.Module):
