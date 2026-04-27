@@ -2,10 +2,15 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+from config_rlhf import BETA
 
 RLHF_DIR = Path(__file__).resolve().parent
-EVAL_FILE = RLHF_DIR / "outputs" / "evaluation_results.json"
-PLOT_DIR = RLHF_DIR / "outputs" / "plots"
+
+# Read from the dynamic evaluation directory
+EVAL_FILE = RLHF_DIR / "outputs" / "evaluation_results" / f"beta{BETA}" / f"evaluation_results_beta{BETA}.json"
+
+# Save to a dynamic plot directory
+PLOT_DIR = RLHF_DIR / "outputs" / "plots" / f"beta{BETA}"
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
 def plot_environment_results(env_id, data):
@@ -21,8 +26,8 @@ def plot_environment_results(env_id, data):
     ppo_stds = [data["ppo_rlhf"][str(k)]["std"] for k in k_values]
     
     # 3. Plot Baselines as horizontal dashed lines
-    plt.axhline(y=expert_mean, color='gold', linestyle='--', linewidth=2, label=f'Expert ($\pi_1$)')
-    plt.axhline(y=mid_mean, color='gray', linestyle='--', linewidth=2, label=f'Mid ($\pi_2$ Anchor)')
+    plt.axhline(y=expert_mean, color='gold', linestyle='--', linewidth=2, label=rf'Expert ($\pi_1$)')
+    plt.axhline(y=mid_mean, color='gray', linestyle='--', linewidth=2, label=rf'Mid ($\pi_2$ Anchor)')
     
     # 4. Plot PPO-RLHF scaling line with error bands
     plt.plot(k_values, ppo_means, marker='o', color='royalblue', linewidth=2, markersize=8, label='PPO-RLHF (Ours)')

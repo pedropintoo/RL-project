@@ -11,9 +11,16 @@ data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
 sys.path.append(str(data_gen_path))
 from config import ENVIRONMENTS, DATASET_SIZES, POLICY_DIR
 
+
 RLHF_DIR = Path(__file__).resolve().parent
-PPO_RLHF_DIR = RLHF_DIR / "outputs" / "ppo_rlhf_results"
-EVAL_FILE = RLHF_DIR / "outputs" / "evaluation_results.json"
+from config_rlhf import BETA
+
+PPO_RLHF_DIR = RLHF_DIR / "outputs" / "ppo_rlhf_results" / f"beta{BETA}"
+
+# New dynamic evaluation directory
+EVAL_DIR = RLHF_DIR / "outputs" / "evaluation_results" / f"beta{BETA}"
+EVAL_DIR.mkdir(parents=True, exist_ok=True)
+EVAL_FILE = EVAL_DIR / f"evaluation_results_beta{BETA}.json"
 
 def evaluate_agent(model_path: Path, env_id: str, n_episodes: int = 50):
     """Loads a model and evaluates it on the RAW environment."""

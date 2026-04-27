@@ -16,11 +16,14 @@ from rlhf_env import RLHFEnvWrapper
 
 # Define local outputs folders inside the rlhf directory
 RLHF_DIR = Path(__file__).resolve().parent
-PPO_RLHF_DIR = RLHF_DIR / "outputs" / "ppo_rlhf_results"
+
+from config_rlhf import BETA
+
+PPO_RLHF_DIR = RLHF_DIR / "outputs" / "ppo_rlhf_results" / f"beta{BETA}"
 PPO_RLHF_DIR.mkdir(parents=True, exist_ok=True)
 RM_DIR = RLHF_DIR / "outputs" / "reward_models"
-LOG_DIR = RLHF_DIR / "outputs" / "logs" # <--- ADD THIS
-LOG_DIR.mkdir(parents=True, exist_ok=True) # <--- ADD THIS
+LOG_DIR = RLHF_DIR / "outputs" / "logs" / f"beta{BETA}"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
     print(f"\n=== Running PPO-RLHF for {cfg.env_id} | K={K} ===")
@@ -50,7 +53,7 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
         raw_env = Monitor(raw_env)
         raw_env.reset(seed=seed)
         
-        rlhf_env = RLHFEnvWrapper(raw_env, reward_model, ref_policy, beta=0.1)
+        rlhf_env = RLHFEnvWrapper(raw_env, reward_model, ref_policy, beta=BETA)
 
         # 4. Initialize the Active PPO Model (starting from the mid-performing weights)
         # We load the zip file again to create a separate updating copy.
@@ -68,7 +71,11 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
         # 5. Train PPO against the Reward Model
         # We use a smaller budget for fine-tuning, e.g., 50% of the original budget
         tune_budget = int(cfg.total_timesteps * 0.5)
-        active_model.learn(total_timesteps=tune_budget)
+        
+        # Create a clean, readable name for TensorBoard
+        run_name = f"{cfg.env_id}_K{K}_seed{seed}"
+
+        active_model.learn(total_timesteps=tune_budget, tb_log_name=run_name)
 
         # 6. Save the final aligned model
         save_path = PPO_RLHF_DIR / f"{cfg.env_id}_K{K}_seed{seed}"
