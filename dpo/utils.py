@@ -98,12 +98,30 @@ def show_video_of_model(save_path, policy, env_name):
     vid = video_recorder.VideoRecorder(env, path=save_path+'{}.mp4'.format(env_name))
     state = env.reset()
     done = False
+    
     for _ in range(100000):
+        # Intercept Gym's internal state and force it to be a native Python float.
+        # This completely bypasses PyGame's inability to read numpy floats or arrays.
+        if hasattr(env.unwrapped, 'last_u') and env.unwrapped.last_u is not None:
+            # np.squeeze removes array brackets, float() converts to native Python type
+            env.unwrapped.last_u = float(np.squeeze(env.unwrapped.last_u))
+        # -------------------------------
+        
         vid.capture_frame()
+        
+        # Get action from policy
         action, _ = policy.act(state)
+        
+        # Ensure action is a flat numpy array for the env.step() call
+        if isinstance(action, torch.Tensor):
+            action = action.detach().cpu().numpy()
+        action = np.array(action).flatten()
+        
+        # Step environment
         next_state, _, done, _ = env.step(action)
         state = next_state
         if done:
             break
+            
     vid.close()
     env.close()

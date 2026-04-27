@@ -5,6 +5,11 @@ import torch.nn.functional as F
 from torch import nn
 from torch.distributions import Categorical, Normal
 
+
+def _reduce_action_log_prob(log_prob: torch.Tensor) -> torch.Tensor:
+    """Return one log-probability per sample, regardless of action dimensionality."""
+    return log_prob.sum(dim=-1) if log_prob.ndim > 1 else log_prob
+
 # Simple Policy Network for testing both discrete and continuous action spaces.
 #
 # state size
@@ -81,9 +86,76 @@ class ContinuousPolicy(Policy):
             action = mu # mean deterministic action
         else:
             action = model.sample()
-        return action.detach().cpu().numpy().flatten(), model.log_prob(action).sum(dim=1) # sum over the total log prob
+        step_log_prob = _reduce_action_log_prob(model.log_prob(action))
+        return action.detach().cpu().numpy().flatten(), step_log_prob
 
     def log_prob_actions(self, states, actions):
         mu, std = self.forward(states)
         model = Normal(mu, std)
-        return model.log_prob(actions).sum(dim=1) # sum over the total log prob
+        return _reduce_action_log_prob(model.log_prob(actions))
+
+class SB3DiscretePolicyAdapter(Policy):
+    """Adapter to make SB3 ActorCriticPolicy conform to the Policy abstract class."""
+    
+    def __init__(self, device, sb3_policy):
+        super(SB3DiscretePolicyAdapter, self).__init__(device, is_discrete=True)
+        self.device = device
+        self.sb3_policy = sb3_policy
+    
+    def forward(self, state):
+        # SB3 policies expect a batch of states, so we add a batch dimension
+        distribution = self.sb3_policy.get_distribution(state)
+        return distribution.distribution.probs.cpu()
+    
+    def act(self, state, deterministic=False):
+        state_tensor = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+        with torch.no_grad():
+            # SB3 handles the distribution creation
+            distribution = self.sb3_policy.get_distribution(state_tensor)
+            
+        if deterministic:
+            action = distribution.mode() # Greedy action
+        else:
+            action = distribution.sample() # Sample action
+            
+        log_prob = distribution.log_prob(action)
+        
+        return action.item(), log_prob.cpu()
+    
+    def log_prob_actions(self, states, actions):
+        # Get the SB3 distribution
+        distribution = self.sb3_policy.get_distribution(states)
+        
+        # SB3 distributions have a built-in log_prob method that returns 
+        # the log probability of the actions while preserving the gradient graph.
+        return distribution.log_prob(actions)
+
+class SB3ContinuousPolicyAdapter(Policy):
+    """Adapter to make SB3 ActorCriticPolicy conform to the Policy abstract class."""
+    
+    def __init__(self, device, sb3_policy):
+        super(SB3ContinuousPolicyAdapter, self).__init__(device, is_discrete=False)
+        self.device = device
+        self.sb3_policy = sb3_policy
+    
+    def forward(self, state):
+        distribution = self.sb3_policy.get_distribution(state)
+        return distribution.distribution.mean.cpu(), distribution.distribution.stddev.cpu()
+    
+    def act(self, state, deterministic=False):
+        state_tensor = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+        with torch.no_grad():
+            distribution = self.sb3_policy.get_distribution(state_tensor)
+            
+        if deterministic:
+            action = distribution.mode() # Greedy action (mean for Normal distribution)
+        else:
+            action = distribution.sample() # Sample action
+            
+        log_prob = distribution.log_prob(action)
+
+        return action.cpu().numpy().flatten(), _reduce_action_log_prob(log_prob).cpu()
+    
+    def log_prob_actions(self, states, actions):
+        distribution = self.sb3_policy.get_distribution(states)
+        return _reduce_action_log_prob(distribution.log_prob(actions))
