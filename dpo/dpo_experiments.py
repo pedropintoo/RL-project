@@ -44,6 +44,7 @@ def train_dpo(
     beta: float = 0.1,
     early_stop: bool = True,
     plateau_window: int = 10,
+    plateau_tol: float = 1e-6,
     checkpoint_dir: Path = Path("./checkpoints"),
 ) -> List[float]:
     """Train DPO and restore the best checkpoint at the end."""
@@ -108,13 +109,16 @@ def train_dpo(
             )
 
         if epoch % print_every == 0:
-            print(f"Epoch {epoch}\tAverage Loss: {mean_loss:.4f}\tBest: {best_loss:.4f} (epoch {best_epoch})")
+            print(f"Epoch {epoch}\tAverage Loss: {mean_loss:.8f}\tBest: {best_loss:.8f} (epoch {best_epoch})")
 
         if early_stop and len(scores) >= plateau_window:
             recent = scores[-plateau_window:]
-            not_going_down = all(recent[i] >= recent[i - 1] for i in range(1, len(recent)))
-            if not_going_down:
-                print(f"Early stop at epoch {epoch}: last {plateau_window} epochs are not decreasing.")
+            plateau_range = max(recent) - min(recent)
+            if plateau_range <= plateau_tol:
+                print(
+                    f"Early stop at epoch {epoch}: last {plateau_window} losses are within "
+                    f"{plateau_tol:.1e} (range={plateau_range:.3e})."
+                )
                 break
 
     if best_ckpt_path.exists():
@@ -168,6 +172,7 @@ def run_dpo_scaling_experiment(
     beta: float = 0.1,
     early_stop: bool = True,
     plateau_window: int = 12,
+    plateau_tol: float = 1e-6,
     n_eval_episodes: int = 50,
 ) -> Dict:
     """Run DPO for all K x seeds and return aggregated metrics."""
@@ -225,6 +230,7 @@ def run_dpo_scaling_experiment(
                 beta=beta,
                 early_stop=early_stop,
                 plateau_window=plateau_window,
+                plateau_tol=plateau_tol,
                 checkpoint_dir=ckpt_dir,
             )
 
