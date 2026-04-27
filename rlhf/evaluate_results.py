@@ -56,14 +56,14 @@ def run_all_evaluations():
         for K in DATASET_SIZES:
             print(f"Evaluating PPO-RLHF (K={K})...")
             k_results = []
-            for seed in range(3):  # Loop over your 3 seeds
+            for seed in range(5):  # Loop over your 5 seeds
                 model_path = PPO_RLHF_DIR / f"{env_id}_K{K}_seed{seed}.zip"
                 res = evaluate_agent(model_path, env_id)
                 if res:
                     k_results.append(res["mean"])
             
             if k_results:
-                # Calculate the overall mean and std deviation ACROSS the 3 seeds
+                # Calculate the overall mean and std deviation ACROSS the 5 seeds
                 results[env_id]["ppo_rlhf"][str(K)] = {
                     "mean": float(np.mean(k_results)),
                     "std": float(np.std(k_results)),
