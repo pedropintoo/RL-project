@@ -2,6 +2,7 @@ import sys
 import json
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from pathlib import Path
 
 # Add the data_generation folder to Python's path so we can import config.py
@@ -21,7 +22,7 @@ RM_DIR.mkdir(parents=True, exist_ok=True)
 def train_reward_model_for_k(env_id: str, K: int, num_seeds: int = 5, epochs: int = 10, lr: float = 3e-4):
     print(f"\n=== Training Reward Models for {env_id} | K={K} ===")
     
-    for seed in range(num_seeds):
+    for seed in range(1, num_seeds + 1):
         print(f"\n--- Training RM Seed {seed} ---")
         
         # 1. Load ONLY the specific dataset for this seed
@@ -63,9 +64,16 @@ def train_reward_model_for_k(env_id: str, K: int, num_seeds: int = 5, epochs: in
                 else:
                     diff = R2_total - R1_total
                     
-                loss = -torch.log(torch.sigmoid(diff))
+                # loss = -torch.log(torch.sigmoid(diff))
+                
+                # Use PyTorch's numerically stable log-sigmoid
+                loss = -F.logsigmoid(diff)
                 
                 loss.backward()
+
+                # Clip the gradients so they can never explode to infinity
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
                 optimizer.step()
                 total_loss += loss.item()
                 

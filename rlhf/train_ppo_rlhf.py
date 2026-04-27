@@ -28,7 +28,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
     print(f"\n=== Running PPO-RLHF for {cfg.env_id} | K={K} ===")
     
-    for seed in range(num_seeds):
+    for seed in range(1, num_seeds + 1):
         print(f"\n--- Training PPO Seed {seed}/{num_seeds-1} ---")
         
         # 1. Load the SPECIFIC Reward Model for this seed!
@@ -43,7 +43,7 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
         
         # 2. Load the mid-performing policy to act as our Anchor
         mid_policy_path = POLICY_DIR / f"{cfg.env_id}_mid"
-        ref_model = PPO.load(mid_policy_path)
+        ref_model = PPO.load(mid_policy_path, device="cpu")
         ref_policy = ref_model.policy
         ref_policy.eval()
 
@@ -59,7 +59,8 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
             mid_policy_path, 
             env=rlhf_env, 
             seed=seed,
-            tensorboard_log=str(LOG_DIR)
+            tensorboard_log=str(LOG_DIR),
+            device="cpu"
         )
         rlhf_env.set_active_policy(active_model.policy)
 

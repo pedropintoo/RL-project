@@ -28,7 +28,7 @@ def evaluate_agent(model_path: Path, env_id: str, n_episodes: int = 50):
         print(f"  [Warning] Model not found: {model_path}")
         return None
         
-    model = PPO.load(model_path)
+    model = PPO.load(model_path, device="cpu")
     env = gym.make(env_id)
     
     # deterministic=True removes exploration noise for true evaluation
@@ -56,7 +56,7 @@ def run_all_evaluations():
         for K in DATASET_SIZES:
             print(f"Evaluating PPO-RLHF (K={K})...")
             k_results = []
-            for seed in range(5):  # Loop over your 5 seeds
+            for seed in range(1, 6):  # Loop from 1 to 5
                 model_path = PPO_RLHF_DIR / f"{env_id}_K{K}_seed{seed}.zip"
                 res = evaluate_agent(model_path, env_id)
                 if res:
