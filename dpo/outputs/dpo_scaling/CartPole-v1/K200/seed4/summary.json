@@ -1,0 +1,8 @@
+{
+  "env_id": "CartPole-v1",
+  "K": 200,
+  "seed": 4,
+  "epochs_ran": 1,
+  "final_loss": 0.2571175120025873,
+  "mean_return": 88.58
+}

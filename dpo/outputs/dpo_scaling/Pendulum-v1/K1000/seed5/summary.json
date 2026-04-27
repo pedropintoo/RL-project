@@ -1,0 +1,8 @@
+{
+  "env_id": "Pendulum-v1",
+  "K": 1000,
+  "seed": 5,
+  "epochs_ran": 1,
+  "final_loss": 0.11289658625019455,
+  "mean_return": -1128.2163317092338
+}
