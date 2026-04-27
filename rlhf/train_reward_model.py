@@ -9,10 +9,12 @@ data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
 sys.path.append(str(data_gen_path))
 
 # Now these imports will work perfectly!
-from config import PREFERENCE_DIR, OUTPUT_DIR, ENVIRONMENTS, DATASET_SIZES
+from config import PREFERENCE_DIR, ENVIRONMENTS, DATASET_SIZES
 from reward_model import RewardModel
 
-RM_DIR = OUTPUT_DIR / "reward_models"
+# Define a local outputs folder inside the rlhf directory
+RLHF_DIR = Path(__file__).resolve().parent
+RM_DIR = RLHF_DIR / "outputs" / "reward_models"
 RM_DIR.mkdir(parents=True, exist_ok=True)
 
 

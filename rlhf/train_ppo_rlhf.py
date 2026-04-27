@@ -10,16 +10,19 @@ data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
 sys.path.append(str(data_gen_path))
 
 # Now import from the config
-from config import ENVIRONMENTS, DATASET_SIZES, POLICY_DIR, OUTPUT_DIR
+from config import ENVIRONMENTS, DATASET_SIZES, POLICY_DIR
 from reward_model import RewardModel
 from rlhf_env import RLHFEnvWrapper
 
-PPO_RLHF_DIR = OUTPUT_DIR / "ppo_rlhf_results"
+# Define local outputs folders inside the rlhf directory
+RLHF_DIR = Path(__file__).resolve().parent
+PPO_RLHF_DIR = RLHF_DIR / "outputs" / "ppo_rlhf_results"
 PPO_RLHF_DIR.mkdir(parents=True, exist_ok=True)
-RM_DIR = OUTPUT_DIR / "reward_models"
+RM_DIR = RLHF_DIR / "outputs" / "reward_models"
+LOG_DIR = RLHF_DIR / "outputs" / "logs" # <--- ADD THIS
+LOG_DIR.mkdir(parents=True, exist_ok=True) # <--- ADD THIS
 
-
-def run_ppo_rlhf(cfg, K: int, num_seeds: int = 3):
+def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
     print(f"\n=== Running PPO-RLHF for {cfg.env_id} | K={K} ===")
     
     # 1. Load the frozen aggregated Reward Model
@@ -50,8 +53,14 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 3):
         rlhf_env = RLHFEnvWrapper(raw_env, reward_model, ref_policy, beta=0.1)
 
         # 4. Initialize the Active PPO Model (starting from the mid-performing weights)
-        # We load the zip file again to create a separate updating copy
-        active_model = PPO.load(mid_policy_path, env=rlhf_env, seed=seed)
+        # We load the zip file again to create a separate updating copy.
+        # We also override the tensorboard_log to fix the Mac/Linux path issue!
+        active_model = PPO.load(
+            mid_policy_path, 
+            env=rlhf_env, 
+            seed=seed,
+            tensorboard_log=str(LOG_DIR) # <--- ADD THIS
+        )
         
         # Link the active policy to the environment wrapper so it can compute KL
         rlhf_env.set_active_policy(active_model.policy)
