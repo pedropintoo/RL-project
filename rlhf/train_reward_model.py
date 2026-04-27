@@ -18,73 +18,66 @@ RM_DIR = RLHF_DIR / "outputs" / "reward_models"
 RM_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def train_reward_model_for_k(env_id: str, K: int, epochs: int = 10, lr: float = 3e-4):
-    print(f"\n--- Training Reward Model for {env_id} | K={K} ---")
+def train_reward_model_for_k(env_id: str, K: int, num_seeds: int = 5, epochs: int = 10, lr: float = 3e-4):
+    print(f"\n=== Training Reward Models for {env_id} | K={K} ===")
     
-    # 1. Aggregate all seeds for this K
-    all_pairs = []
-    files = list(PREFERENCE_DIR.glob(f"{env_id}_K{K}_s*.json"))
-    if not files:
-        print(f"No data found for {env_id} K={K}. Skipping.")
-        return
+    for seed in range(num_seeds):
+        print(f"\n--- Training RM Seed {seed} ---")
         
-    for file_path in files:
+        # 1. Load ONLY the specific dataset for this seed
+        file_path = PREFERENCE_DIR / f"{env_id}_K{K}_s{seed}.json"
+        if not file_path.exists():
+            print(f"Data not found at {file_path}. Skipping seed {seed}.")
+            continue
+            
         with open(file_path, "r") as f:
             data = json.load(f)
-            all_pairs.extend(data["pairs"])
+            pairs = data["pairs"]
             
-    print(f"Aggregated {len(files)} files. Total pairs: {len(all_pairs)}")
+        print(f"Loaded {len(pairs)} pairs from seed {seed}.")
 
-    # 2. Setup Model and Optimizer
-    model = RewardModel(env_id)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+        # 2. Setup Model and Optimizer
+        model = RewardModel(env_id)
+        optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # 3. Training Loop
-    model.train()
-    for epoch in range(epochs):
-        total_loss = 0.0
-        
-        for pair in all_pairs:
-            # Extract tau1
-            obs1 = torch.tensor(pair["tau1"]["states"])
-            act1 = torch.tensor(pair["tau1"]["actions"])
-            # Extract tau2
-            obs2 = torch.tensor(pair["tau2"]["states"])
-            act2 = torch.tensor(pair["tau2"]["actions"])
+        # 3. Training Loop
+        model.train()
+        for epoch in range(epochs):
+            total_loss = 0.0
             
-            preferred = pair["preferred"] # 0 for tau1, 1 for tau2
-
-            optimizer.zero_grad()
-            
-            # Predict rewards for every step in the trajectory and sum them
-            r1_steps = model(obs1, act1)
-            R1_total = r1_steps.sum()
-            
-            r2_steps = model(obs2, act2)
-            R2_total = r2_steps.sum()
-            
-            # Bradley-Terry loss: -log(sigmoid(R_winner - R_loser))
-            if preferred == 0:
-                diff = R1_total - R2_total
-            else:
-                diff = R2_total - R1_total
+            for pair in pairs:
+                obs1 = torch.tensor(pair["tau1"]["states"])
+                act1 = torch.tensor(pair["tau1"]["actions"])
+                obs2 = torch.tensor(pair["tau2"]["states"])
+                act2 = torch.tensor(pair["tau2"]["actions"])
                 
-            loss = -torch.log(torch.sigmoid(diff))
-            
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.item()
-            
-        avg_loss = total_loss / len(all_pairs)
-        print(f"Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.4f}")
+                preferred = pair["preferred"]
 
-    # 4. Save the aggregated reward model
-    save_path = RM_DIR / f"{env_id}_K{K}_reward_model.pth"
-    torch.save(model.state_dict(), save_path)
-    print(f"Saved reward model to {save_path}")
+                optimizer.zero_grad()
+                
+                R1_total = model(obs1, act1).sum()
+                R2_total = model(obs2, act2).sum()
+                
+                if preferred == 0:
+                    diff = R1_total - R2_total
+                else:
+                    diff = R2_total - R1_total
+                    
+                loss = -torch.log(torch.sigmoid(diff))
+                
+                loss.backward()
+                optimizer.step()
+                total_loss += loss.item()
+                
+            avg_loss = total_loss / len(pairs)
+            print(f"Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.4f}")
+
+        # 4. Save this specific seed's reward model
+        save_path = RM_DIR / f"{env_id}_K{K}_seed{seed}_reward_model.pth"
+        torch.save(model.state_dict(), save_path)
+        print(f"Saved reward model to {save_path}")
 
 if __name__ == "__main__":
-    # Train aggregated reward models for all environments and K sizes
     for cfg in ENVIRONMENTS:
         for K in DATASET_SIZES:
-            train_reward_model_for_k(cfg.env_id, K)
+            train_reward_model_for_k(cfg.env_id, K, num_seeds=5)
