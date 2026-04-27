@@ -25,28 +25,27 @@ RM_DIR = RLHF_DIR / "outputs" / "reward_models"
 LOG_DIR = RLHF_DIR / "outputs" / "logs" / f"beta{BETA}"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
+def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
     print(f"\n=== Running PPO-RLHF for {cfg.env_id} | K={K} ===")
     
-    # 1. Load the frozen aggregated Reward Model
-    rm_path = RM_DIR / f"{cfg.env_id}_K{K}_reward_model.pth"
-    if not rm_path.exists():
-        print(f"Reward model not found at {rm_path}. Run train_reward_model.py first.")
-        return
-        
-    reward_model = RewardModel(cfg.env_id)
-    reward_model.load_state_dict(torch.load(rm_path))
-    reward_model.eval()
-
-    # Run across multiple seeds for robust evaluation
     for seed in range(num_seeds):
-        print(f"--- Training Seed {seed+1}/{num_seeds} ---")
+        print(f"\n--- Training PPO Seed {seed}/{num_seeds-1} ---")
         
-        # 2. Load the mid-performing policy to act as our Reference Model (Frozen Anchor)
+        # 1. Load the SPECIFIC Reward Model for this seed!
+        rm_path = RM_DIR / f"{cfg.env_id}_K{K}_seed{seed}_reward_model.pth"
+        if not rm_path.exists():
+            print(f"Reward model not found at {rm_path}. Skipping.")
+            continue
+            
+        reward_model = RewardModel(cfg.env_id)
+        reward_model.load_state_dict(torch.load(rm_path))
+        reward_model.eval()
+        
+        # 2. Load the mid-performing policy to act as our Anchor
         mid_policy_path = POLICY_DIR / f"{cfg.env_id}_mid"
         ref_model = PPO.load(mid_policy_path)
         ref_policy = ref_model.policy
-        ref_policy.eval() # Freeze reference policy
+        ref_policy.eval()
 
         # 3. Create and Wrap the Environment
         raw_env = gym.make(cfg.env_id)
@@ -55,24 +54,17 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
         
         rlhf_env = RLHFEnvWrapper(raw_env, reward_model, ref_policy, beta=BETA)
 
-        # 4. Initialize the Active PPO Model (starting from the mid-performing weights)
-        # We load the zip file again to create a separate updating copy.
-        # We also override the tensorboard_log to fix the Mac/Linux path issue!
+        # 4. Initialize Active PPO Model
         active_model = PPO.load(
             mid_policy_path, 
             env=rlhf_env, 
             seed=seed,
-            tensorboard_log=str(LOG_DIR) # <--- ADD THIS
+            tensorboard_log=str(LOG_DIR)
         )
-        
-        # Link the active policy to the environment wrapper so it can compute KL
         rlhf_env.set_active_policy(active_model.policy)
 
-        # 5. Train PPO against the Reward Model
-        # We use a smaller budget for fine-tuning, e.g., 50% of the original budget
+        # 5. Train PPO against this specific Reward Model
         tune_budget = int(cfg.total_timesteps * 0.5)
-        
-        # Create a clean, readable name for TensorBoard
         run_name = f"{cfg.env_id}_K{K}_seed{seed}"
 
         active_model.learn(total_timesteps=tune_budget, tb_log_name=run_name)
@@ -87,4 +79,4 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 1):
 if __name__ == "__main__":
     for cfg in ENVIRONMENTS:
         for K in DATASET_SIZES:
-            run_ppo_rlhf(cfg, K, num_seeds=3)
+            run_ppo_rlhf(cfg, K, num_seeds=5)
