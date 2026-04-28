@@ -13,8 +13,8 @@ EVAL_BASE_DIR = RLHF_DIR / "outputs" / "evaluation_results"
 PLOT_DIR = RLHF_DIR / "outputs" / "plots" / "ablation_comparisons"
 PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Distinct colors for the different beta lines
-COLORS = ['#d7191c', '#fdae61', '#abd9e9', '#2c7bb6']
+# Distinct colors: 0.01 (Red), 0.1 (Green), 0.5 (Orange), 2.0 (Blue)
+COLORS = ['#d7191c', '#1a9641', '#ff7f0e', '#2c7bb6']
 
 def plot_beta_ablation_for_env(env_id):
     plt.figure(figsize=(10, 6))
@@ -56,7 +56,7 @@ def plot_beta_ablation_for_env(env_id):
                  linewidth=2.5, markersize=8, label=rf'PPO-RLHF ($\beta={beta}$)')
 
     # 4. Formatting
-    plt.title(f"Impact of KL Penalty ($\beta$) on RLHF Scaling - {env_id}", fontsize=14, fontweight='bold')
+    plt.title(rf"Impact of KL Penalty ($\beta$) on RLHF Scaling - {env_id}", fontsize=14, fontweight='bold')
     plt.xlabel("Number of Preference Pairs (K)", fontsize=12)
     plt.ylabel("True Environment Return", fontsize=12)
     plt.xscale('log') 

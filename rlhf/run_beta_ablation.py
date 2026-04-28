@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-BETAS = [2.0] # You can adjust this list to include more or fewer beta values as needed
+BETAS = [0.01, 0.1, 0.5, 2.0] # You can adjust this list to include more or fewer beta values as needed
 
 def run_experiment():
     for beta in BETAS:
