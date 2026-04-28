@@ -128,6 +128,7 @@ def train_one_environment(cfg: EnvConfig, seed: int) -> None:
         seed=seed,
         verbose=1,
         tensorboard_log=str(LOG_DIR),
+        device="cpu",
     )
 
     mid_path = str(POLICY_DIR / f"{cfg.env_id}_mid")

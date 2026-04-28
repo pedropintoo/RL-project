@@ -49,8 +49,8 @@ ALGO_REGISTRY = {"PPO": PPO, "SAC": SAC}
 
 def load_policies(cfg: EnvConfig):
     AlgoCls = ALGO_REGISTRY[cfg.algo]
-    pi1 = AlgoCls.load(POLICY_DIR / f"{cfg.env_id}_expert")
-    pi2 = AlgoCls.load(POLICY_DIR / f"{cfg.env_id}_mid")
+    pi1 = AlgoCls.load(POLICY_DIR / f"{cfg.env_id}_expert", device="cpu")
+    pi2 = AlgoCls.load(POLICY_DIR / f"{cfg.env_id}_mid", device="cpu")
     return pi1, pi2
 
 

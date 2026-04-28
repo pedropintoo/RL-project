@@ -68,6 +68,18 @@ ENVIRONMENTS: List[EnvConfig] = [
         expert_return=-150.0,
         mid_fraction=0.5,
     ),
+
+    # # NEW ENVIRONMENT
+    # EnvConfig(
+    #     env_id="MountainCarContinuous-v0",
+    #     algo="SAC",
+    #     total_timesteps=100000,  # Sparse reward needs more exploration time
+    #     eval_freq=10_000,          # Evaluate to catch the mid-policy
+    #     max_episode_steps=999,     # Gym default for MountainCar
+    #     random_return=-50.0,       # Car just wiggling at the bottom wastes energy (-0.1 * action^2)
+    #     expert_return=90.0,        # Reaching the flag quickly yields ~90 (+100 goal minus action penalties)
+    #     mid_fraction=0.5,
+    # ),
 ]
 
 

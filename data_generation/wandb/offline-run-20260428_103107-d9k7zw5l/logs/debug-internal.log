@@ -1,0 +1,18 @@
+{"time":"2026-04-28T10:31:08.019024489+02:00","level":"INFO","msg":"wandb-core"}
+{"time":"2026-04-28T10:31:08.019040811+02:00","level":"INFO","msg":"stream: starting","core version":"0.26.1"}
+{"time":"2026-04-28T10:31:09.839005408+02:00","level":"WARN","msg":"featurechecker: GraphQL client is nil, skipping feature loading"}
+{"time":"2026-04-28T10:31:09.839046458+02:00","level":"WARN","msg":"featurechecker: GraphQL client is nil, skipping feature loading"}
+{"time":"2026-04-28T10:31:09.839082087+02:00","level":"INFO","msg":"stream: created new stream","id":"d9k7zw5l"}
+{"time":"2026-04-28T10:31:09.839151381+02:00","level":"INFO","msg":"handler: started"}
+{"time":"2026-04-28T10:31:09.839247828+02:00","level":"INFO","msg":"stream: started"}
+{"time":"2026-04-28T10:31:09.839330798+02:00","level":"INFO","msg":"sender: started"}
+{"time":"2026-04-28T10:31:09.839319486+02:00","level":"INFO","msg":"writer: started","stream_id":"d9k7zw5l"}
+{"time":"2026-04-28T10:31:09.852785515+02:00","level":"WARN","msg":"featurechecker: GraphQL client is nil, skipping feature loading"}
+{"time":"2026-04-28T10:31:09.852827847+02:00","level":"WARN","msg":"runupserter: server does not expand metric globs but the x_server_side_expand_glob_metrics setting is set; ignoring"}
+{"time":"2026-04-28T10:31:20.550950617+02:00","level":"WARN","msg":"tensorboard: no root directory","error":"timed out after 10s"}
+{"time":"2026-04-28T10:31:20.551097542+02:00","level":"INFO","msg":"tensorboard: tracking new log directory","rootDir":{},"logDir":"LocalOrCloudPath(LocalPath=\"/home/joao/Documents/EPFL/RL-project/data_generation/outputs/logs/SAC_1\")","namespace":""}
+{"time":"2026-04-28T10:31:20.551672229+02:00","level":"INFO","msg":"tensorboard: saving file","fileLocation":"/home/joao/Documents/EPFL/RL-project/data_generation/outputs/logs/SAC_1/events.out.tfevents.1777365070.Joao.20279.0","runPath":"outputs/logs/SAC_1/events.out.tfevents.1777365070.Joao.20279.0"}
+{"time":"2026-04-28T10:42:40.738717488+02:00","level":"INFO","msg":"stream: finishing up"}
+{"time":"2026-04-28T10:42:40.738764704+02:00","level":"INFO","msg":"handler: closed"}
+{"time":"2026-04-28T10:42:40.738865455+02:00","level":"INFO","msg":"sender: closed"}
+{"time":"2026-04-28T10:42:40.738897627+02:00","level":"INFO","msg":"stream: all finished"}
