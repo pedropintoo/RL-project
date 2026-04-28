@@ -28,7 +28,7 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
     print(f"\n=== Running PPO-RLHF for {cfg.env_id} | K={K} ===")
     
     for seed in range(1, num_seeds + 1):
-        print(f"\n--- Training PPO Seed {seed}/{num_seeds-1} ---")
+        print(f"\n--- Training PPO Seed {seed}/{num_seeds} ---")
         
         # 1. Load the SPECIFIC Reward Model for this seed!
         rm_path = RM_DIR / f"{cfg.env_id}_K{K}_seed{seed}_reward_model.pth"
