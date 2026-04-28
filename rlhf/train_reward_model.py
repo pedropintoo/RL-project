@@ -9,7 +9,6 @@ from pathlib import Path
 data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
 sys.path.append(str(data_gen_path))
 
-# Now these imports will work perfectly!
 from config import PREFERENCE_DIR, ENVIRONMENTS, DATASET_SIZES
 from reward_model import RewardModel
 

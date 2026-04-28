@@ -9,7 +9,6 @@ from stable_baselines3.common.monitor import Monitor
 data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
 sys.path.append(str(data_gen_path))
 
-# Now import from the config
 from config import ENVIRONMENTS, DATASET_SIZES, POLICY_DIR
 from reward_model import RewardModel
 from rlhf_env import RLHFEnvWrapper

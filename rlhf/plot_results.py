@@ -40,7 +40,7 @@ def plot_environment_results(env_id, data):
     plt.title(f"RLHF Performance Scaling - {env_id}", fontsize=14, fontweight='bold')
     plt.xlabel("Number of Preference Pairs (K)", fontsize=12)
     plt.ylabel("True Environment Return", fontsize=12)
-    plt.xscale('log') # Log scale is standard for dataset sizes (50 -> 200 -> 1000)
+    plt.xscale('log') # Log scale for dataset sizes (50 -> 200 -> 1000)
     plt.xticks(k_values, labels=[str(k) for k in k_values])
     plt.grid(True, linestyle=':', alpha=0.7)
     plt.legend(loc='lower right' if env_id == 'CartPole-v1' else 'upper left', fontsize=11)
