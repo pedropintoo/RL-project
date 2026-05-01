@@ -42,6 +42,10 @@ class EnvConfig:
     random_return: float = 0.0
     expert_return: float = 0.0
     mid_fraction: float = 0.5
+    # Extra kwargs forwarded to the SB3 algorithm constructor. Used for
+    # envs that need non-default hyperparameters to learn (e.g. gSDE for
+    # MountainCarContinuous-v0).
+    algo_kwargs: dict = field(default_factory=dict)
 
 
 ENVIRONMENTS: List[EnvConfig] = [
@@ -68,18 +72,36 @@ ENVIRONMENTS: List[EnvConfig] = [
         expert_return=-150.0,
         mid_fraction=0.5,
     ),
-
-    # # NEW ENVIRONMENT
-    # EnvConfig(
-    #     env_id="MountainCarContinuous-v0",
-    #     algo="SAC",
-    #     total_timesteps=100000,  # Sparse reward needs more exploration time
-    #     eval_freq=10_000,          # Evaluate to catch the mid-policy
-    #     max_episode_steps=999,     # Gym default for MountainCar
-    #     random_return=-50.0,       # Car just wiggling at the bottom wastes energy (-0.1 * action^2)
-    #     expert_return=90.0,        # Reaching the flag quickly yields ~90 (+100 goal minus action penalties)
-    #     mid_fraction=0.5,
-    # ),
+    # Continuous 1-D action, sparse reward: +100 on reaching the goal,
+    # otherwise -0.1 * action^2 per step. Random ≈ -35 (action penalty),
+    # a "do-nothing" policy ≈ 0 (no penalty, never reaches the goal), a
+    # solved policy ≈ +90. Vanilla SAC reliably gets stuck at the
+    # do-nothing local optimum on this env, so we use the SB3 RL-Zoo
+    # recipe: gSDE for state-dependent exploration, larger ent_coef,
+    # high gamma, and frequent gradient steps.
+    EnvConfig(
+        env_id="MountainCarContinuous-v0",
+        algo="SAC",
+        total_timesteps=50_000,
+        eval_freq=1_000,
+        max_episode_steps=999,
+        random_return=-35.0,
+        expert_return=90.0,
+        mid_fraction=0.5,
+        algo_kwargs=dict(
+            learning_rate=3e-4,
+            buffer_size=50_000,
+            batch_size=512,
+            ent_coef=0.1,
+            train_freq=32,
+            gradient_steps=32,
+            gamma=0.9999,
+            tau=0.01,
+            learning_starts=0,
+            use_sde=True,
+            policy_kwargs=dict(log_std_init=-3.67, net_arch=[64, 64]),
+        ),
+    ),
 ]
 
 

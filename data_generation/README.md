@@ -35,7 +35,7 @@ wandb login
 python train_policies.py
 
 # 2. Generate preference datasets. By default this sweeps
-#    2 envs x 3 sizes x 5 seeds = 30 datasets.
+#    3 envs x 3 sizes x 5 seeds = 45 datasets.
 python generate_preferences.py
 ```
 
@@ -51,13 +51,20 @@ To run training without a W&B account, set `WANDB_MODE=disabled` (no logging) or
 
 ## Environments
 
-- **CartPole-v1** — discrete actions. Ensures DPO and PPO-RLHF are exercised in
-  the discrete regime.
-- **Pendulum-v1** — continuous actions. Ensures both methods are exercised in
-  the continuous regime.
+- **CartPole-v1** — discrete actions, dense reward. Trained with PPO. Ensures
+  DPO and PPO-RLHF are exercised in the discrete regime.
+- **Pendulum-v1** — continuous actions, dense (cost-based) reward. Trained
+  with PPO. Continuous-control baseline with a smooth reward signal.
+- **MountainCarContinuous-v0** — continuous actions, sparse reward (+100 only
+  on reaching the flag, otherwise a small action penalty). Trained with SAC
+  using gSDE because vanilla SAC reliably gets trapped in a "do-nothing" local
+  optimum on this env. Provides a sparse-reward stress test for the same
+  RLHF pipeline.
 
-Both are in the course's allowed environment list and train quickly with PPO.
-Additional environments can be added by editing [config.py](config.py).
+All three are in the course's allowed environment list. Additional
+environments can be added by appending an `EnvConfig` entry to
+[config.py](config.py); per-env algorithm hyperparameters can be passed via
+the `algo_kwargs` field (used here to enable gSDE on MountainCarContinuous).
 
 ## Design notes
 
@@ -112,8 +119,8 @@ The binary preference label is then a Bernoulli(p) sample.
 ### 4. Dataset layout
 
 Each `(env, K, seed)` triple produces one JSON file (full trajectories) and one
-CSV file (one line per pair, for quick EDA). With the defaults (2 envs, 3 sizes,
-5 seeds) this is **30 JSON files + 30 CSV files**. Files are named
+CSV file (one line per pair, for quick EDA). With the defaults (3 envs, 3 sizes,
+5 seeds) this is **45 JSON files + 45 CSV files**. Files are named
 `<env>_K<size>_s<base_seed>.{json,csv}` so the sweep axes are readable from the
 filename alone.
 
@@ -123,7 +130,9 @@ trivially nested. The derived seed is `base_seed + hash((env_id, K)) mod 10000`
 and is stored as `"seed"` inside the JSON, alongside the original `"base_seed"`.
 
 Sanity checks: `frac_tau1_preferred` should sit near 1 on CartPole (large
-expert-vs-mid return gap), and closer to 0.7-0.9 on Pendulum (smaller gap).
+expert-vs-mid return gap), and closer to 0.8-0.9 on Pendulum and
+MountainCarContinuous (smaller gap, plus high intra-policy variance for pi_2
+on MountainCarContinuous since it solves only some episodes).
 
 ## Dataset format
 
@@ -244,6 +253,15 @@ runs can be overlaid on the W&B project page to compare seeds or environments.
   CartPole and is configured for 300k steps vs. CartPole's 100k. SAC converges
   faster than PPO on Pendulum; change `algo="PPO"` to `algo="SAC"` in
   [config.py](config.py) to use it.
+- **MountainCarContinuous "expert" return is ≈ 0 instead of ≈ 90.** SAC
+  collapsed to the do-nothing local optimum (output zero force, never reach
+  the flag, but avoid the action penalty). Confirm `use_sde=True` is set in
+  the env's `algo_kwargs` in [config.py](config.py) — gSDE is what drives
+  the exploration needed to discover the swing-up. If gSDE is on and it still
+  fails, raise `ent_coef` (try 0.2) or extend `total_timesteps`. Delete any
+  stale `MountainCarContinuous-v0_{expert,mid}.zip` from
+  `outputs/policies/` before retraining, or generate_preferences.py will pick
+  up the broken expert.
 - **`frac_tau1_preferred` close to 0.5.** Either pi_1 and pi_2 are too close in
   performance (raise `mid_fraction` toward 0.3-0.4, i.e. save pi_2 earlier), or
   the rollout seed is producing unusually similar trajectories (try a different
