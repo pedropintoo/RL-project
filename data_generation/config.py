@@ -49,29 +49,29 @@ class EnvConfig:
 
 
 ENVIRONMENTS: List[EnvConfig] = [
-    # # Discrete action space, +1 reward per step, max return = 500.
-    # EnvConfig(
-    #     env_id="CartPole-v1",
-    #     algo="PPO",
-    #     total_timesteps=100_000,
-    #     eval_freq=2_000,
-    #     max_episode_steps=500,
-    #     random_return=22.0,       # typical random-policy return
-    #     expert_return=500.0,      # environment cap
-    #     mid_fraction=0.5,
-    # ),
-    # # Continuous action space, cost-based reward (always <= 0).
-    # # "Expert" is ~ -150, random is ~ -1200. Half-way ≈ -675.
-    # EnvConfig(
-    #     env_id="Pendulum-v1",
-    #     algo="PPO",
-    #     total_timesteps=300_000,
-    #     eval_freq=5_000,
-    #     max_episode_steps=200,
-    #     random_return=-1200.0,
-    #     expert_return=-150.0,
-    #     mid_fraction=0.5,
-    # ),
+    # Discrete action space, +1 reward per step, max return = 500.
+    EnvConfig(
+        env_id="CartPole-v1",
+        algo="PPO",
+        total_timesteps=100_000,
+        eval_freq=2_000,
+        max_episode_steps=500,
+        random_return=22.0,       # typical random-policy return
+        expert_return=500.0,      # environment cap
+        mid_fraction=0.5,
+    ),
+    # Continuous action space, cost-based reward (always <= 0).
+    # "Expert" is ~ -150, random is ~ -1200. Half-way ≈ -675.
+    EnvConfig(
+        env_id="Pendulum-v1",
+        algo="PPO",
+        total_timesteps=300_000,
+        eval_freq=5_000,
+        max_episode_steps=200,
+        random_return=-1200.0,
+        expert_return=-150.0,
+        mid_fraction=0.5,
+    ),
     # Continuous 1-D action, sparse reward: +100 on reaching the goal,
     # otherwise -0.1 * action^2 per step. Random ≈ -35 (action penalty),
     # a "do-nothing" policy ≈ 0 (no penalty, never reaches the goal), a
