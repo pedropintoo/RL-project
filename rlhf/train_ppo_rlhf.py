@@ -2,8 +2,10 @@ import sys
 import gymnasium as gym
 import torch
 from pathlib import Path
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.monitor import Monitor
+
+ALGO_REGISTRY = {"PPO": PPO, "SAC": SAC}
 
 # Add the data_generation folder to Python's path
 data_gen_path = Path(__file__).resolve().parent.parent / "data_generation"
@@ -42,7 +44,8 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
         
         # 2. Load the mid-performing policy to act as our Anchor
         mid_policy_path = POLICY_DIR / f"{cfg.env_id}_mid"
-        ref_model = PPO.load(mid_policy_path, device="cpu")
+        AlgoCls = ALGO_REGISTRY[cfg.algo] # Dynamically get PPO or SAC
+        ref_model = AlgoCls.load(mid_policy_path, device="cpu")
         ref_policy = ref_model.policy
         ref_policy.eval()
 
@@ -54,7 +57,7 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
         rlhf_env = RLHFEnvWrapper(raw_env, reward_model, ref_policy, beta=BETA)
 
         # 4. Initialize Active PPO Model
-        active_model = PPO.load(
+        active_model = AlgoCls.load(
             mid_policy_path, 
             env=rlhf_env, 
             seed=seed,

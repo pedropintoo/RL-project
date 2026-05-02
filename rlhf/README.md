@@ -23,6 +23,7 @@ rlhf/
     ├── logs/                # TensorBoard event files
     ├── evaluation_results/  # JSON files aggregating mean/std data
     └── plots/               # Final .png scaling graphs
+        └── ablation_comparisons/ # Combined plots from the beta ablation study
 ```
 
 The folders `ppo_rlhf_results/`, `logs/`, `evaluation_results/`, and `plots/` are further nested by the `BETA` KL penalty parameter (e.g., `beta0.1/`) to allow for clean tracking of different experimental conditions without log pollution.
@@ -75,4 +76,21 @@ Reads the evaluation JSON and plots the True Environment Return against the Data
 ```bash
 python3 plot_results.py
 ```
+
+
+## $\beta$ Ablation Study
+
+To understand how the KL penalty coefficient ($\beta$) affects the policy's ability to maximize the reward model without drifting too far from the reference anchor, we include an automated ablation study. 
+
+Once you have successfully trained the Reward Models (Step 1 above), you can run the entire ablation study using the orchestrator:
+```bash
+python3 run_beta_ablation.py
 ```
+This script sequentially executes `train_ppo_rlhf.py` and `evaluate_results.py` across a predefined list of beta values (e.g., `[0.01, 0.1, 0.5, 2.0]`), dynamically routing the outputs into their respective beta folders.
+
+To generate the comparison graphs overlaying all tested $\beta$ values:
+```bash
+python3 plot_beta_ablation.py
+```
+
+The final ablation charts can be viewed in `outputs/plots/ablation_comparisons/` (e.g., `CartPole-v1_beta_ablation_plot.png` and `Pendulum-v1_beta_ablation_plot.png`).
