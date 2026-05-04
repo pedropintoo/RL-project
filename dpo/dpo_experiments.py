@@ -42,6 +42,7 @@ def train_dpo(
     n_epochs: int = 20,
     print_every: int = 1,
     beta: float = 0.1,
+    kl_coef: float = 0.0,
     early_stop: bool = True,
     plateau_window: int = 10,
     checkpoint_dir: Path = Path("./checkpoints"),
@@ -65,6 +66,10 @@ def train_dpo(
             policy_chosen_logp, policy_rejected_logp = preference_pair_logps(policy_model, pair)
             with torch.no_grad():
                 reference_chosen_logp, reference_rejected_logp = preference_pair_logps(reference_model, pair)
+                if kl_coef > 0.0:
+                    chosen_states = torch.as_tensor(pair["tau1"]["states"], dtype=torch.float32, device=policy_model.device)
+                    rejected_states = torch.as_tensor(pair["tau2"]["states"], dtype=torch.float32, device=policy_model.device)
+                    kl_states = torch.cat([chosen_states, rejected_states], dim=0)
 
             loss, _, _ = dpo_loss(
                 policy_chosen_logps=policy_chosen_logp,
@@ -73,6 +78,9 @@ def train_dpo(
                 reference_rejected_logps=reference_rejected_logp,
                 beta=beta,
             )
+            if kl_coef > 0.0:
+                kl_penalty = policy_model.kl_divergence(reference_model, kl_states)
+                loss = loss + kl_coef * kl_penalty
 
             optimizer.zero_grad()
             loss.backward()
@@ -169,6 +177,7 @@ def run_dpo_scaling_experiment(
     early_stop: bool = True,
     plateau_window: int = 12,
     n_eval_episodes: int = 50,
+    kl_coef_by_env: Dict[str, float],
 ) -> Dict:
     """Run DPO for all K x seeds and return aggregated metrics."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -190,6 +199,8 @@ def run_dpo_scaling_experiment(
     results[env_id]["baselines"]["mid"] = _evaluate_sb3_checkpoint(
         mid_path, env_id, device, n_episodes=n_eval_episodes
     )
+
+    kl_coef = kl_coef_by_env.get(env_id, 0.0)
 
     for k in dataset_sizes:
         seed_returns: List[float] = []
@@ -223,6 +234,7 @@ def run_dpo_scaling_experiment(
                 n_epochs=n_epochs,
                 print_every=1,
                 beta=beta,
+                kl_coef=kl_coef,
                 early_stop=early_stop,
                 plateau_window=plateau_window,
                 checkpoint_dir=ckpt_dir,

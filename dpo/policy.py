@@ -3,7 +3,7 @@ import gym
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torch.distributions import Categorical, Normal
+from torch.distributions import Categorical, Normal, kl_divergence
 
 
 def _reduce_action_log_prob(log_prob: torch.Tensor) -> torch.Tensor:
@@ -32,6 +32,8 @@ class Policy(nn.Module):
         raise NotImplementedError
     def log_prob_actions(self, states, actions):
         raise NotImplementedError
+    def kl_divergence(self, reference_policy, states):
+        raise NotImplementedError
 
 class DiscretePolicy(Policy):
     def __init__(self, device, state_size=4, action_size=2, hidden_size=32):
@@ -59,6 +61,13 @@ class DiscretePolicy(Policy):
         probs = self.forward(states)
         model = Categorical(probs)
         return model.log_prob(actions)
+
+    def kl_divergence(self, reference_policy, states):
+        current_probs = self.forward(states)
+        reference_probs = reference_policy.forward(states)
+        current_dist = Categorical(current_probs)
+        reference_dist = Categorical(reference_probs)
+        return kl_divergence(current_dist, reference_dist).mean()
 
 
 class ContinuousPolicy(Policy):
@@ -93,6 +102,13 @@ class ContinuousPolicy(Policy):
         mu, std = self.forward(states)
         model = Normal(mu, std)
         return _reduce_action_log_prob(model.log_prob(actions))
+
+    def kl_divergence(self, reference_policy, states):
+        current_mu, current_std = self.forward(states)
+        reference_mu, reference_std = reference_policy.forward(states)
+        current_dist = Normal(current_mu, current_std)
+        reference_dist = Normal(reference_mu, reference_std)
+        return kl_divergence(current_dist, reference_dist).sum(dim=-1).mean()
 
 class SB3DiscretePolicyAdapter(Policy):
     """Adapter to make SB3 ActorCriticPolicy conform to the Policy abstract class."""
@@ -130,6 +146,11 @@ class SB3DiscretePolicyAdapter(Policy):
         # the log probability of the actions while preserving the gradient graph.
         return distribution.log_prob(actions)
 
+    def kl_divergence(self, reference_policy, states):
+        current_distribution = self.sb3_policy.get_distribution(states)
+        reference_distribution = reference_policy.sb3_policy.get_distribution(states)
+        return kl_divergence(current_distribution.distribution, reference_distribution.distribution).mean()
+
 class SB3ContinuousPolicyAdapter(Policy):
     """Adapter to make SB3 ActorCriticPolicy conform to the Policy abstract class."""
     
@@ -159,3 +180,8 @@ class SB3ContinuousPolicyAdapter(Policy):
     def log_prob_actions(self, states, actions):
         distribution = self.sb3_policy.get_distribution(states)
         return _reduce_action_log_prob(distribution.log_prob(actions))
+
+    def kl_divergence(self, reference_policy, states):
+        current_distribution = self.sb3_policy.get_distribution(states)
+        reference_distribution = reference_policy.sb3_policy.get_distribution(states)
+        return kl_divergence(current_distribution.distribution, reference_distribution.distribution).sum(dim=-1).mean()
