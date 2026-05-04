@@ -44,7 +44,11 @@ def trajectory_logp(policy: Policy, trajectory: Dict) -> torch.Tensor:
         actions = torch.as_tensor(trajectory['actions'], dtype=torch.float32, device=policy.device)
 
     per_step_logp = policy.log_prob_actions(states, actions) # Compute log-probabilities for each step
-    return per_step_logp.sum()
+    # Normalize by trajectory length to avoid bias towards longer trajectories
+    # (preference datasets may contain trajectories with very different lengths).
+    # Return the average per-step log-probability so comparisons are length-invariant.
+    length = float(per_step_logp.numel()) if hasattr(per_step_logp, 'numel') else 1.0
+    return per_step_logp.sum() / max(length, 1.0)
 
 def evaluate_policy_returns(policy: Policy, env_name: str = 'Pendulum-v1', n_episodes: int = 50, max_t: int = 500, deterministic: bool = True):
     """Run evaluation episodes and return mean/std episode return."""
