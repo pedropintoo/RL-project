@@ -50,6 +50,7 @@ def train_dpo(
     eval_every: int = 5,
     n_eval_episodes: int = 20,
     max_t: int = 500,
+    batch_size: int = 1,
 ) -> Tuple[List[float], List[Dict]]:
     """Train DPO and restore the best checkpoint at the end.
 
@@ -119,31 +120,42 @@ def train_dpo(
         )
         print(f"Epoch 0\tReturn: {mean_r0:.2f} (starting point)")
 
+    indices = list(range(n_pairs))
+
     for epoch in range(1, n_epochs + 1):
-        # Per-pair SGD: one optimizer step per preference pair.
-        # This keeps Adam's momentum statistics well-calibrated across epochs
-        # (K updates per epoch rather than 1), which is important for stable
-        # training on small datasets.
+        # Mini-batch SGD: shuffle pairs, then do one optimizer step per batch.
+        # batch_size=1  → per-pair SGD (K steps/epoch, best Adam calibration)
+        # batch_size=K  → full-batch GD  (1 step/epoch, avoid this for small K)
+        # batch_size=16 → good balance for large K (fewer steps, still stable)
+        np.random.shuffle(indices)
         epoch_loss_sum = 0.0
 
-        for i, pair in enumerate(pairs):
-            policy_chosen_logp, policy_rejected_logp = preference_pair_logps(policy_model, pair)
+        for batch_start in range(0, n_pairs, batch_size):
+            batch_idx = indices[batch_start: batch_start + batch_size]
+            actual_bs = len(batch_idx)
 
-            loss, _, _ = dpo_loss(
-                policy_chosen_logps=policy_chosen_logp,
-                policy_rejected_logps=policy_rejected_logp,
-                reference_chosen_logps=ref_chosen_logps[i],
-                reference_rejected_logps=ref_rejected_logps[i],
-                beta=beta,
-            )
-            if kl_coef > 0.0:
-                kl_penalty = policy_model.kl_divergence(reference_model, kl_states_list[i])
-                loss = loss + kl_coef * kl_penalty
-
-            epoch_loss_sum += loss.item()
             optimizer.zero_grad()
-            loss.backward()
+            batch_loss_sum = 0.0
+
+            for i in batch_idx:
+                policy_chosen_logp, policy_rejected_logp = preference_pair_logps(policy_model, pairs[i])
+
+                loss, _, _ = dpo_loss(
+                    policy_chosen_logps=policy_chosen_logp,
+                    policy_rejected_logps=policy_rejected_logp,
+                    reference_chosen_logps=ref_chosen_logps[i],
+                    reference_rejected_logps=ref_rejected_logps[i],
+                    beta=beta,
+                )
+                if kl_coef > 0.0:
+                    kl_penalty = policy_model.kl_divergence(reference_model, kl_states_list[i])
+                    loss = loss + kl_coef * kl_penalty
+
+                batch_loss_sum += loss.item()
+                (loss / actual_bs).backward()  # normalise so LR is batch-size-invariant
+
             optimizer.step()
+            epoch_loss_sum += batch_loss_sum
 
         mean_loss = epoch_loss_sum / n_pairs
         scores.append(mean_loss)
@@ -200,7 +212,7 @@ def train_dpo(
                 # show no improvement over best_return. Evaluations happen every
                 # eval_every epochs, so this covers plateau_window * eval_every epochs.
                 recent_returns = [e["mean_return"] for e in eval_curve[-plateau_window:]]
-                if all(r <= best_return for r in recent_returns):
+                if all(r < best_return for r in recent_returns):
                     print(f"Early stop at epoch {epoch}: no return improvement in last {plateau_window} evaluations.")
                     break
             elif env_id is None and len(scores) >= plateau_window:
@@ -248,6 +260,35 @@ def _evaluate_sb3_checkpoint(model_path: Path, env_id: str, device, n_episodes: 
     return {"mean": float(mean_r), "std": float(std_r)}
 
 
+# Hyperparameter defaults applied when a key is absent from run_config.
+_HPARAM_DEFAULTS: Dict = {
+    "lr": 1e-2,
+    "beta": 0.1,
+    "kl_coef": 0.01,
+    "batch_size": 1,
+    "n_epochs": 50,
+    "plateau_window": 12,
+    "early_stop": True,
+    "eval_every": 5,
+}
+
+
+def _resolve_hparams(run_config: Dict, env_id: str, k: int) -> Dict:
+    """Return the merged hyperparameter dict for a given (env, K) pair.
+
+    Resolution order (later entries override earlier ones):
+      1. _HPARAM_DEFAULTS         — global fallback
+      2. run_config[env_id]["default"]  — env-level defaults
+      3. run_config[env_id][k]          — K-specific overrides
+    """
+    env_cfg = run_config.get(env_id, {})
+    return {
+        **_HPARAM_DEFAULTS,
+        **env_cfg.get("default", {}),
+        **env_cfg.get(k, {}),
+    }
+
+
 def run_dpo_scaling_experiment(
     env_id: str,
     dataset_sizes: Iterable[int],
@@ -257,15 +298,14 @@ def run_dpo_scaling_experiment(
     policy_dir: Path,
     output_dir: Path,
     device,
-    n_epochs: int = 80,
-    lr: float = 1e-4,
-    beta: float = 0.1,
-    early_stop: bool = True,
-    plateau_window: int = 12,
     n_eval_episodes: int = 50,
-    kl_coef_by_env: Dict[str, float],
+    run_config: Dict,
 ) -> Dict:
-    """Run DPO for all K x seeds and return aggregated metrics."""
+    """Run DPO for all K x seeds and return aggregated metrics.
+
+    Hyperparameters (lr, kl_coef, batch_size, n_epochs, …) are resolved
+    per (env_id, K) via run_config.  See _resolve_hparams for the lookup order.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
 
     results = {
@@ -287,12 +327,11 @@ def run_dpo_scaling_experiment(
         mid_path, env_id, device, n_episodes=n_eval_episodes
     )
 
-    kl_coef = kl_coef_by_env.get(env_id, 0.0)
-
     for k in dataset_sizes:
+        hp = _resolve_hparams(run_config, env_id, k)
         seed_returns: List[float] = []
         seed_curves: List[List[Dict]] = []
-        print(f"\n=== DPO | env={env_id} | K={k} ===")
+        print(f"\n=== DPO | env={env_id} | K={k} | {hp} ===")
 
         for seed in seeds:
             pref_path = preference_dir / f"{env_id}_K{k}_s{seed}.json"
@@ -307,7 +346,7 @@ def run_dpo_scaling_experiment(
             reference_model = copy.deepcopy(policy_model).to(device)
             reference_model.eval()
 
-            optimizer = optim.Adam(policy_model.parameters(), lr=lr, weight_decay=0.0)
+            optimizer = optim.Adam(policy_model.parameters(), lr=hp["lr"], weight_decay=0.0)
 
             run_dir = output_dir / env_id / f"K{k}" / f"seed{seed}"
             ckpt_dir = run_dir / "checkpoints"
@@ -320,17 +359,18 @@ def run_dpo_scaling_experiment(
                 reference_model=reference_model,
                 optimizer=optimizer,
                 preference_data=preference_data,
-                n_epochs=n_epochs,
+                n_epochs=hp["n_epochs"],
                 print_every=1,
-                beta=beta,
-                kl_coef=kl_coef,
-                early_stop=early_stop,
-                plateau_window=plateau_window,
+                beta=hp["beta"],
+                kl_coef=hp["kl_coef"],
+                early_stop=hp["early_stop"],
+                plateau_window=hp["plateau_window"],
                 checkpoint_dir=ckpt_dir,
                 env_id=env_id,
-                eval_every=5,
+                eval_every=hp["eval_every"],
                 n_eval_episodes=20,
                 max_t=max_t,
+                batch_size=hp["batch_size"],
             )
 
             # Use the best-checkpoint return when available (env-eval-based selection),
