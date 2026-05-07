@@ -46,77 +46,153 @@ def train_dpo(
     early_stop: bool = True,
     plateau_window: int = 10,
     checkpoint_dir: Path = Path("./checkpoints"),
-) -> List[float]:
-    """Train DPO and restore the best checkpoint at the end."""
+    env_id: str = None,
+    eval_every: int = 5,
+    n_eval_episodes: int = 20,
+    max_t: int = 500,
+) -> Tuple[List[float], List[Dict]]:
+    """Train DPO and restore the best checkpoint at the end.
+
+    Checkpoint selection strategy:
+    - When env_id is provided: evaluates the policy in the environment every
+      eval_every epochs and keeps the checkpoint with the highest mean return.
+      This is the correct criterion for RL — training loss going to 0 means
+      the policy has memorised the preference pairs, not that it performs well.
+    - When env_id is None: falls back to minimum training loss (use only when
+      environment evaluation is unavailable).
+
+    Returns:
+        (loss_scores, eval_curve) where eval_curve is a list of
+        {"epoch": int, "mean_return": float} dicts recorded every eval_every
+        epochs (empty list when env_id is None).
+    """
     scores: List[float] = []
+    eval_curve: List[Dict] = []
     pairs = preference_data["pairs"]
+    n_pairs = len(pairs)
 
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     best_ckpt_path = checkpoint_dir / "dpo_best.pt"
 
     reference_model.eval()
 
+    # Precompute frozen reference log-probs once — the reference model never
+    # changes, so recomputing it every epoch wastes n_pairs × n_epochs forward passes.
+    with torch.no_grad():
+        ref_chosen_logps: List[torch.Tensor] = []
+        ref_rejected_logps: List[torch.Tensor] = []
+        kl_states_list: List[torch.Tensor] = []
+        for pair in pairs:
+            rc, rr = preference_pair_logps(reference_model, pair)
+            ref_chosen_logps.append(rc.detach())
+            ref_rejected_logps.append(rr.detach())
+            if kl_coef > 0.0:
+                chosen_states = torch.as_tensor(pair["tau1"]["states"], dtype=torch.float32, device=policy_model.device)
+                rejected_states = torch.as_tensor(pair["tau2"]["states"], dtype=torch.float32, device=policy_model.device)
+                kl_states_list.append(torch.cat([chosen_states, rejected_states], dim=0))
+
     best_loss = float("inf")
+    best_return = float("-inf")
     best_epoch = 0
 
-    for epoch in range(1, n_epochs + 1):
-        epoch_losses: List[float] = []
+    # Epoch-0 evaluation: record the starting performance (= mid policy baseline)
+    # so the training curve shows the full picture from the very beginning.
+    if env_id is not None:
+        _, mean_r0, _ = evaluate_policy_returns(
+            policy_model,
+            env_name=env_id,
+            n_episodes=n_eval_episodes,
+            max_t=max_t,
+            deterministic=True,
+        )
+        eval_curve.append({"epoch": 0, "mean_return": float(mean_r0)})
+        best_return = mean_r0
+        torch.save(
+            {
+                "epoch": 0,
+                "model_state_dict": policy_model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "mean_loss": float("inf"),
+                "mean_return": mean_r0,
+            },
+            best_ckpt_path,
+        )
+        print(f"Epoch 0\tReturn: {mean_r0:.2f} (starting point)")
 
-        for pair in pairs:
+    for epoch in range(1, n_epochs + 1):
+        # Per-pair SGD: one optimizer step per preference pair.
+        # This keeps Adam's momentum statistics well-calibrated across epochs
+        # (K updates per epoch rather than 1), which is important for stable
+        # training on small datasets.
+        epoch_loss_sum = 0.0
+
+        for i, pair in enumerate(pairs):
             policy_chosen_logp, policy_rejected_logp = preference_pair_logps(policy_model, pair)
-            with torch.no_grad():
-                reference_chosen_logp, reference_rejected_logp = preference_pair_logps(reference_model, pair)
-                if kl_coef > 0.0:
-                    chosen_states = torch.as_tensor(pair["tau1"]["states"], dtype=torch.float32, device=policy_model.device)
-                    rejected_states = torch.as_tensor(pair["tau2"]["states"], dtype=torch.float32, device=policy_model.device)
-                    kl_states = torch.cat([chosen_states, rejected_states], dim=0)
 
             loss, _, _ = dpo_loss(
                 policy_chosen_logps=policy_chosen_logp,
                 policy_rejected_logps=policy_rejected_logp,
-                reference_chosen_logps=reference_chosen_logp,
-                reference_rejected_logps=reference_rejected_logp,
+                reference_chosen_logps=ref_chosen_logps[i],
+                reference_rejected_logps=ref_rejected_logps[i],
                 beta=beta,
             )
             if kl_coef > 0.0:
-                kl_penalty = policy_model.kl_divergence(reference_model, kl_states)
+                kl_penalty = policy_model.kl_divergence(reference_model, kl_states_list[i])
                 loss = loss + kl_coef * kl_penalty
 
+            epoch_loss_sum += loss.item()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            epoch_losses.append(loss.item())
-
-        mean_loss = float(np.mean(epoch_losses))
+        mean_loss = epoch_loss_sum / n_pairs
         scores.append(mean_loss)
 
-        epoch_ckpt_path = checkpoint_dir / f"dpo_epoch_{epoch:04d}.pt"
-        torch.save(
-            {
-                "epoch": epoch,
-                "model_state_dict": policy_model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "mean_loss": mean_loss,
-            },
-            epoch_ckpt_path,
-        )
-
-        if mean_loss < best_loss:
-            best_loss = mean_loss
-            best_epoch = epoch
-            torch.save(
-                {
-                    "epoch": epoch,
-                    "model_state_dict": policy_model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
-                    "mean_loss": mean_loss,
-                },
-                best_ckpt_path,
-            )
-
-        if epoch % print_every == 0:
-            print(f"Epoch {epoch}\tAverage Loss: {mean_loss:.8f}\tBest: {best_loss:.8f} (epoch {best_epoch})")
+        if env_id is not None:
+            # Env-eval-based checkpoint selection: keep the policy that achieves
+            # the highest return, not the one that most overfits the training pairs.
+            if epoch % eval_every == 0 or epoch == n_epochs:
+                _, mean_r, _ = evaluate_policy_returns(
+                    policy_model,
+                    env_name=env_id,
+                    n_episodes=n_eval_episodes,
+                    max_t=max_t,
+                    deterministic=True,
+                )
+                eval_curve.append({"epoch": epoch, "mean_return": float(mean_r)})
+                if mean_r > best_return:
+                    best_return = mean_r
+                    best_epoch = epoch
+                    torch.save(
+                        {
+                            "epoch": epoch,
+                            "model_state_dict": policy_model.state_dict(),
+                            "optimizer_state_dict": optimizer.state_dict(),
+                            "mean_loss": mean_loss,
+                            "mean_return": mean_r,
+                        },
+                        best_ckpt_path,
+                    )
+                if epoch % print_every == 0:
+                    print(f"Epoch {epoch}\tLoss: {mean_loss:.8f}\tReturn: {mean_r:.2f}\tBest return: {best_return:.2f} (epoch {best_epoch})")
+            elif epoch % print_every == 0:
+                print(f"Epoch {epoch}\tLoss: {mean_loss:.8f}")
+        else:
+            # Fallback: loss-based selection (prone to overfitting on small datasets).
+            if mean_loss < best_loss:
+                best_loss = mean_loss
+                best_epoch = epoch
+                torch.save(
+                    {
+                        "epoch": epoch,
+                        "model_state_dict": policy_model.state_dict(),
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "mean_loss": mean_loss,
+                    },
+                    best_ckpt_path,
+                )
+            if epoch % print_every == 0:
+                print(f"Epoch {epoch}\tAverage Loss: {mean_loss:.8f}\tBest: {best_loss:.8f} (epoch {best_epoch})")
 
         if early_stop and len(scores) >= plateau_window:
             recent = scores[-plateau_window:]
@@ -126,13 +202,14 @@ def train_dpo(
                 break
 
     if best_ckpt_path.exists():
-        best_ckpt = torch.load(best_ckpt_path, map_location=policy_model.device)
+        best_ckpt = torch.load(best_ckpt_path, map_location=policy_model.device, weights_only=False)
         policy_model.load_state_dict(best_ckpt["model_state_dict"])
-        print(
-            f"Restored best checkpoint from epoch {best_ckpt['epoch']} with loss {best_ckpt['mean_loss']:.4f}."
-        )
+        if env_id is not None:
+            print(f"Restored best checkpoint from epoch {best_ckpt['epoch']} with return {best_ckpt.get('mean_return', float('nan')):.2f}.")
+        else:
+            print(f"Restored best checkpoint from epoch {best_ckpt['epoch']} with loss {best_ckpt['mean_loss']:.4f}.")
 
-    return scores
+    return scores, eval_curve
 
 
 def _build_adapter_for_env(env_id: str, sb3_policy, device):
@@ -149,7 +226,7 @@ def _evaluate_sb3_checkpoint(model_path: Path, env_id: str, device, n_episodes: 
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
 
-    sb3_model = PPO.load(model_path)
+    sb3_model = PPO.load(model_path, device="cpu")
     adapter = _build_adapter_for_env(env_id, sb3_model.policy, device)
 
     _, mean_r, std_r = evaluate_policy_returns(
@@ -186,6 +263,7 @@ def run_dpo_scaling_experiment(
         env_id: {
             "baselines": {},
             "dpo": {},
+            "training_curves": {},
         }
     }
 
@@ -204,6 +282,7 @@ def run_dpo_scaling_experiment(
 
     for k in dataset_sizes:
         seed_returns: List[float] = []
+        seed_curves: List[List[Dict]] = []
         print(f"\n=== DPO | env={env_id} | K={k} ===")
 
         for seed in seeds:
@@ -214,7 +293,7 @@ def run_dpo_scaling_experiment(
 
             preference_data = load_preference_dataset(pref_path)
 
-            sb3_model = PPO.load(mid_path)
+            sb3_model = PPO.load(mid_path, device="cpu")
             policy_model = _build_adapter_for_env(env_id, sb3_model.policy, device)
             reference_model = copy.deepcopy(policy_model).to(device)
             reference_model.eval()
@@ -226,7 +305,8 @@ def run_dpo_scaling_experiment(
             ckpt_dir.mkdir(parents=True, exist_ok=True)
 
             print(f"Training DPO for K={k}, seed={seed}...")
-            scores = train_dpo(
+            max_t = 500 if env_id == "CartPole-v1" else 200
+            scores, eval_curve = train_dpo(
                 policy_model=policy_model,
                 reference_model=reference_model,
                 optimizer=optimizer,
@@ -238,15 +318,25 @@ def run_dpo_scaling_experiment(
                 early_stop=early_stop,
                 plateau_window=plateau_window,
                 checkpoint_dir=ckpt_dir,
+                env_id=env_id,
+                eval_every=5,
+                n_eval_episodes=20,
+                max_t=max_t,
             )
 
-            _, mean_r, _ = evaluate_policy_returns(
-                policy_model,
-                env_name=env_id,
-                n_episodes=n_eval_episodes,
-                max_t=500 if env_id == "CartPole-v1" else 200,
-                deterministic=True,
-            )
+            # Use the best-checkpoint return when available (env-eval-based selection),
+            # otherwise fall back to a final evaluation of the restored policy.
+            if eval_curve:
+                mean_r = max(entry["mean_return"] for entry in eval_curve)
+                seed_curves.append(eval_curve)
+            else:
+                _, mean_r, _ = evaluate_policy_returns(
+                    policy_model,
+                    env_name=env_id,
+                    n_episodes=n_eval_episodes,
+                    max_t=max_t,
+                    deterministic=True,
+                )
             seed_returns.append(float(mean_r))
 
             with (run_dir / "summary.json").open("w", encoding="utf-8") as f:
@@ -258,6 +348,7 @@ def run_dpo_scaling_experiment(
                         "epochs_ran": len(scores),
                         "final_loss": float(scores[-1]) if scores else None,
                         "mean_return": float(mean_r),
+                        "eval_curve": eval_curve,
                     },
                     f,
                     indent=2,
@@ -268,6 +359,24 @@ def run_dpo_scaling_experiment(
                 "mean": float(np.mean(seed_returns)),
                 "std": float(np.std(seed_returns)),
                 "raw_seeds": seed_returns,
+            }
+
+        if seed_curves:
+            # Aggregate training curves across seeds: average return per epoch.
+            epochs = [entry["epoch"] for entry in seed_curves[0]]
+            avg_returns = [
+                float(np.mean([curve[i]["mean_return"] for curve in seed_curves if i < len(curve)]))
+                for i in range(len(epochs))
+            ]
+            std_returns = [
+                float(np.std([curve[i]["mean_return"] for curve in seed_curves if i < len(curve)]))
+                for i in range(len(epochs))
+            ]
+            results[env_id]["training_curves"][str(k)] = {
+                "epochs": epochs,
+                "mean_returns": avg_returns,
+                "std_returns": std_returns,
+                "per_seed": seed_curves,
             }
 
     results_path = output_dir / f"dpo_scaling_{env_id}.json"
