@@ -194,12 +194,21 @@ def train_dpo(
             if epoch % print_every == 0:
                 print(f"Epoch {epoch}\tAverage Loss: {mean_loss:.8f}\tBest: {best_loss:.8f} (epoch {best_epoch})")
 
-        if early_stop and len(scores) >= plateau_window:
-            recent = scores[-plateau_window:]
-            not_going_down = all(recent[i] >= recent[i - 1] for i in range(1, len(recent)))
-            if not_going_down:
-                print(f"Early stop at epoch {epoch}: last {plateau_window} epochs are not decreasing.")
-                break
+        if early_stop:
+            if env_id is not None and len(eval_curve) > plateau_window:
+                # Return-based plateau: stop when the last plateau_window evaluations
+                # show no improvement over best_return. Evaluations happen every
+                # eval_every epochs, so this covers plateau_window * eval_every epochs.
+                recent_returns = [e["mean_return"] for e in eval_curve[-plateau_window:]]
+                if all(r <= best_return for r in recent_returns):
+                    print(f"Early stop at epoch {epoch}: no return improvement in last {plateau_window} evaluations.")
+                    break
+            elif env_id is None and len(scores) >= plateau_window:
+                # Fallback loss-based plateau (used when no env eval is available).
+                recent = scores[-plateau_window:]
+                if all(recent[i] >= recent[i - 1] for i in range(1, len(recent))):
+                    print(f"Early stop at epoch {epoch}: loss not decreasing for {plateau_window} epochs.")
+                    break
 
     if best_ckpt_path.exists():
         best_ckpt = torch.load(best_ckpt_path, map_location=policy_model.device, weights_only=False)
