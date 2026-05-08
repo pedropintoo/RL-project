@@ -68,6 +68,18 @@ ENVIRONMENTS: List[EnvConfig] = [
         expert_return=-150.0,
         mid_fraction=0.5,
     ),
+    # Continuous 1-D action, sparse reward (+100 on goal, -0.1*action^2/step).
+    # Trained with SAC + gSDE. Expert ≈ 90, random ≈ -35, mid ≈ 28.
+    EnvConfig(
+        env_id="MountainCarContinuous-v0",
+        algo="SAC",
+        total_timesteps=50_000,
+        eval_freq=1_000,
+        max_episode_steps=999,
+        random_return=-35.0,
+        expert_return=90.0,
+        mid_fraction=0.5,
+    ),
 ]
 
 

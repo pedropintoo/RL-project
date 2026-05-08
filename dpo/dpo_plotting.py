@@ -16,6 +16,11 @@ def plot_environment_results(env_id: str, data: Dict, plot_dir: Path) -> Path:
     k_values = sorted([int(k) for k in data["dpo"].keys()])
     dpo_means = [data["dpo"][str(k)]["mean"] for k in k_values]
     dpo_stds = [data["dpo"][str(k)]["std"] for k in k_values]
+    
+    has_rlhf = "ppo_rlhf" in data
+    if has_rlhf:
+        rlhf_means = [data["ppo_rlhf"][str(k)]["mean"] for k in k_values]
+        rlhf_stds = [data["ppo_rlhf"][str(k)]["std"] for k in k_values]
 
     plt.figure(figsize=(8, 6))
     plt.axhline(y=expert_mean, color="gold", linestyle="--", linewidth=2, label=r"Expert ($\pi_1$)")
@@ -38,7 +43,25 @@ def plot_environment_results(env_id: str, data: Dict, plot_dir: Path) -> Path:
         alpha=0.2,
     )
 
-    plt.title(f"DPO Performance Scaling - {env_id}", fontsize=14, fontweight="bold")
+    if has_rlhf:
+        plt.plot(
+            k_values,
+            rlhf_means,
+            marker="s",
+            color="red",
+            linewidth=2,
+            markersize=8,
+            label="RLHF",
+        )
+        plt.fill_between(
+            k_values,
+            np.array(rlhf_means) - np.array(rlhf_stds),
+            np.array(rlhf_means) + np.array(rlhf_stds),
+            color="red",
+            alpha=0.2,
+        )
+
+    plt.title(f"DPO {'vs RLHF' if has_rlhf else ''} Performance Scaling - {env_id}", fontsize=14, fontweight="bold")
     plt.xlabel("Number of Preference Pairs (K)", fontsize=12)
     plt.ylabel("True Environment Return", fontsize=12)
     plt.xscale("log")

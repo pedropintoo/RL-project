@@ -153,30 +153,30 @@ class SB3DiscretePolicyAdapter(Policy):
 
 class SB3ContinuousPolicyAdapter(Policy):
     """Adapter to make SB3 ActorCriticPolicy conform to the Policy abstract class."""
-    
+
     def __init__(self, device, sb3_policy):
         super(SB3ContinuousPolicyAdapter, self).__init__(device, is_discrete=False)
         self.device = device
         self.sb3_policy = sb3_policy
-    
+
     def forward(self, state):
         distribution = self.sb3_policy.get_distribution(state)
         return distribution.distribution.mean.cpu(), distribution.distribution.stddev.cpu()
-    
+
     def act(self, state, deterministic=False):
         state_tensor = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
         with torch.no_grad():
             distribution = self.sb3_policy.get_distribution(state_tensor)
-            
+
         if deterministic:
-            action = distribution.mode() # Greedy action (mean for Normal distribution)
+            action = distribution.mode()
         else:
-            action = distribution.sample() # Sample action
-            
+            action = distribution.sample()
+
         log_prob = distribution.log_prob(action)
 
         return action.cpu().numpy().flatten(), _reduce_action_log_prob(log_prob).cpu()
-    
+
     def log_prob_actions(self, states, actions):
         distribution = self.sb3_policy.get_distribution(states)
         return _reduce_action_log_prob(distribution.log_prob(actions))
@@ -185,3 +185,53 @@ class SB3ContinuousPolicyAdapter(Policy):
         current_distribution = self.sb3_policy.get_distribution(states)
         reference_distribution = reference_policy.sb3_policy.get_distribution(states)
         return kl_divergence(current_distribution.distribution, reference_distribution.distribution).sum(dim=-1).mean()
+
+
+class SB3SACPolicyAdapter(Policy):
+    """Adapter to make SB3 SACPolicy conform to the Policy abstract class.
+
+    SAC exposes the distribution via actor.get_action_dist_params() rather than
+    get_distribution(). Supports both standard Gaussian and gSDE (use_sde=True).
+    """
+
+    def __init__(self, device, sb3_policy):
+        super(SB3SACPolicyAdapter, self).__init__(device, is_discrete=False)
+        self.device = device
+        self.sb3_policy = sb3_policy
+
+    def _get_dist(self, states):
+        mean_actions, log_std, kwargs = self.sb3_policy.actor.get_action_dist_params(states)
+        return self.sb3_policy.actor.action_dist.proba_distribution(mean_actions, log_std, **kwargs)
+
+    def forward(self, state):
+        mean_actions, log_std, _ = self.sb3_policy.actor.get_action_dist_params(state)
+        return mean_actions, log_std.exp()
+
+    def act(self, state, deterministic=False):
+        state_tensor = torch.as_tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+        with torch.no_grad():
+            dist = self._get_dist(state_tensor)
+            action = dist.mode() if deterministic else dist.sample()
+            log_prob = dist.log_prob(action)
+        return action.cpu().numpy().flatten(), log_prob.cpu()
+
+    def log_prob_actions(self, states, actions):
+        # dist.log_prob handles tanh unsquashing internally for SAC's squashed Gaussian
+        dist = self._get_dist(states)
+        return dist.log_prob(actions)
+
+    def kl_divergence(self, reference_policy, states):
+        mean_act, log_std_act, kwargs_act = self.sb3_policy.actor.get_action_dist_params(states)
+        mean_ref, log_std_ref, kwargs_ref = reference_policy.sb3_policy.actor.get_action_dist_params(states)
+
+        if "latent_sde" in kwargs_act:
+            # gSDE: project latent noise through the log_std matrix to get per-dim variance
+            std_act = torch.sqrt(torch.mm(kwargs_act["latent_sde"] ** 2, torch.exp(log_std_act) ** 2) + 1e-8)
+            std_ref = torch.sqrt(torch.mm(kwargs_ref["latent_sde"] ** 2, torch.exp(log_std_ref) ** 2) + 1e-8)
+        else:
+            std_act = torch.exp(log_std_act)
+            std_ref = torch.exp(log_std_ref)
+
+        # Closed-form KL(current || reference) for diagonal Gaussians
+        kl = torch.log(std_ref / std_act) + (std_act ** 2 + (mean_act - mean_ref) ** 2) / (2.0 * std_ref ** 2) - 0.5
+        return kl.sum(dim=-1).mean()

@@ -1,4 +1,3 @@
-import copy
 import json
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
@@ -9,9 +8,11 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from gymnasium import spaces
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 
-from policy import SB3ContinuousPolicyAdapter, SB3DiscretePolicyAdapter
+from policy import SB3ContinuousPolicyAdapter, SB3DiscretePolicyAdapter, SB3SACPolicyAdapter
+
+ALGO_REGISTRY = {"PPO": PPO, "SAC": SAC}
 from utils import evaluate_policy_returns, load_preference_dataset, preference_pair_logps
 
 
@@ -233,7 +234,10 @@ def train_dpo(
     return scores, eval_curve
 
 
-def _build_adapter_for_env(env_id: str, sb3_policy, device):
+def _build_adapter_for_env(env_id: str, sb3_policy, device, algo: str = "PPO"):
+    if algo == "SAC":
+        return SB3SACPolicyAdapter(device, sb3_policy).to(device)
+
     env = gym.make(env_id)
     is_discrete = isinstance(env.action_space, spaces.Discrete)
     env.close()
@@ -243,18 +247,18 @@ def _build_adapter_for_env(env_id: str, sb3_policy, device):
     return SB3ContinuousPolicyAdapter(device, sb3_policy).to(device)
 
 
-def _evaluate_sb3_checkpoint(model_path: Path, env_id: str, device, n_episodes: int = 50) -> Dict[str, float]:
+def _evaluate_sb3_checkpoint(model_path: Path, env_id: str, device, n_episodes: int = 50, algo: str = "PPO") -> Dict[str, float]:
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
 
-    sb3_model = PPO.load(model_path, device="cpu")
-    adapter = _build_adapter_for_env(env_id, sb3_model.policy, device)
+    sb3_model = ALGO_REGISTRY[algo].load(model_path, device="cpu")
+    adapter = _build_adapter_for_env(env_id, sb3_model.policy, device, algo=algo)
 
     _, mean_r, std_r = evaluate_policy_returns(
         adapter,
         env_name=env_id,
         n_episodes=n_episodes,
-        max_t=500 if env_id == "CartPole-v1" else 200,
+        max_t={"CartPole-v1": 500, "Pendulum-v1": 200, "MountainCarContinuous-v0": 999}.get(env_id, 500),
         deterministic=True,
     )
     return {"mean": float(mean_r), "std": float(std_r)}
@@ -308,6 +312,9 @@ def run_dpo_scaling_experiment(
     """
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # algo is a per-env setting, not a per-K hyperparameter — read it once at the top
+    algo = run_config.get(env_id, {}).get("algo", "PPO")
+
     results = {
         env_id: {
             "baselines": {},
@@ -319,19 +326,19 @@ def run_dpo_scaling_experiment(
     expert_path = policy_dir / f"{env_id}_expert.zip"
     mid_path = policy_dir / f"{env_id}_mid.zip"
 
-    print(f"Evaluating baselines for {env_id}...")
+    print(f"Evaluating baselines for {env_id}... (algo={algo})")
     results[env_id]["baselines"]["expert"] = _evaluate_sb3_checkpoint(
-        expert_path, env_id, device, n_episodes=n_eval_episodes
+        expert_path, env_id, device, n_episodes=n_eval_episodes, algo=algo
     )
     results[env_id]["baselines"]["mid"] = _evaluate_sb3_checkpoint(
-        mid_path, env_id, device, n_episodes=n_eval_episodes
+        mid_path, env_id, device, n_episodes=n_eval_episodes, algo=algo
     )
 
     for k in dataset_sizes:
         hp = _resolve_hparams(run_config, env_id, k)
         seed_returns: List[float] = []
         seed_curves: List[List[Dict]] = []
-        print(f"\n=== DPO | env={env_id} | K={k} | {hp} ===")
+        print(f"\n=== DPO | env={env_id} | K={k} | algo={algo} | {hp} ===")
 
         for seed in seeds:
             pref_path = preference_dir / f"{env_id}_K{k}_s{seed}.json"
@@ -341,9 +348,12 @@ def run_dpo_scaling_experiment(
 
             preference_data = load_preference_dataset(pref_path)
 
-            sb3_model = PPO.load(mid_path, device="cpu")
-            policy_model = _build_adapter_for_env(env_id, sb3_model.policy, device)
-            reference_model = copy.deepcopy(policy_model).to(device)
+            sb3_model = ALGO_REGISTRY[algo].load(mid_path, device="cpu")
+            policy_model = _build_adapter_for_env(env_id, sb3_model.policy, device, algo=algo)
+            # Load reference from file instead of deepcopy — SAC uses weight_norm which
+            # is incompatible with torch's deepcopy protocol.
+            sb3_ref = ALGO_REGISTRY[algo].load(mid_path, device="cpu")
+            reference_model = _build_adapter_for_env(env_id, sb3_ref.policy, device, algo=algo)
             reference_model.eval()
 
             optimizer = optim.Adam(policy_model.parameters(), lr=hp["lr"], weight_decay=0.0)
@@ -353,7 +363,8 @@ def run_dpo_scaling_experiment(
             ckpt_dir.mkdir(parents=True, exist_ok=True)
 
             print(f"Training DPO for K={k}, seed={seed}...")
-            max_t = 500 if env_id == "CartPole-v1" else 200
+            _max_t_map = {"CartPole-v1": 500, "Pendulum-v1": 200, "MountainCarContinuous-v0": 999}
+            max_t = _max_t_map.get(env_id, 500)
             scores, eval_curve = train_dpo(
                 policy_model=policy_model,
                 reference_model=reference_model,
