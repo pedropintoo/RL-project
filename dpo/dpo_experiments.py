@@ -212,7 +212,7 @@ def train_dpo(
                 # show no improvement over best_return. Evaluations happen every
                 # eval_every epochs, so this covers plateau_window * eval_every epochs.
                 recent_returns = [e["mean_return"] for e in eval_curve[-plateau_window:]]
-                if all(r < best_return for r in recent_returns):
+                if all(r <= best_return for r in recent_returns) and (best_epoch < epoch - plateau_window * eval_every) and (best_epoch > 0):
                     print(f"Early stop at epoch {epoch}: no return improvement in last {plateau_window} evaluations.")
                     break
             elif env_id is None and len(scores) >= plateau_window:
