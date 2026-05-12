@@ -1,16 +1,14 @@
 import json
 import gymnasium as gym
-import gym as gym_old
 import torch
 import numpy as np
 from pathlib import Path
 from typing import Dict
 
 # For visualization
-from gym.wrappers.monitoring import video_recorder
+from gymnasium.wrappers import RecordVideo
 from IPython.display import HTML
 from IPython import display
-import glob
 import base64, io
 
 from policy import Policy
@@ -82,50 +80,72 @@ def evaluate_policy_returns(policy: Policy, env_name: str = 'Pendulum-v1', n_epi
 
     return returns, mean_return, std_return
 
-# Visualization utilities (gym_old is needed for video recording)
 def show_video(save_path, env_name):
     """Display a video of the trained model in Colab."""
-    mp4list = glob.glob(save_path+'*.mp4')
-    if len(mp4list) > 0:
-        mp4 = save_path+'{}.mp4'.format(env_name)
-        video = io.open(mp4, 'r+b').read()
-        encoded = base64.b64encode(video)
-        display.display(HTML(data='''<video alt="test" autoplay
-                loop controls style="height: 400px;">
-                <source src="data:video/mp4;base64,{0}" type="video/mp4" />
-             </video>'''.format(encoded.decode('ascii'))))
-    else:
+    save_path_obj = Path(save_path)
+    video_dir = save_path_obj.parent if save_path_obj.parent != Path("") else Path(".")
+    prefix = f"{save_path_obj.name}_{env_name}"
+    run_dir = video_dir / prefix
+    mp4list = sorted(run_dir.glob("*.mp4"), key=lambda p: p.stat().st_mtime) if run_dir.exists() else []
+
+    if len(mp4list) == 0:
         print("Could not find video")
+        return
+
+    mp4 = mp4list[-1]
+    video = io.open(mp4, 'r+b').read()
+    encoded = base64.b64encode(video)
+    display.display(HTML(data='''<video alt="test" autoplay
+            loop controls style="height: 400px;">
+            <source src="data:video/mp4;base64,{0}" type="video/mp4" />
+         </video>'''.format(encoded.decode('ascii'))))
 
 def show_video_of_model(save_path, policy, env_name):
-    env = gym_old.make(env_name)
-    vid = video_recorder.VideoRecorder(env, path=save_path+'{}.mp4'.format(env_name))
-    state = env.reset()
+    save_path_obj = Path(save_path)
+    video_dir = save_path_obj.parent if save_path_obj.parent != Path("") else Path(".")
+    video_dir.mkdir(parents=True, exist_ok=True)
+    prefix = f"{save_path_obj.name}_{env_name}"
+    run_dir = video_dir / prefix
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clean previous recordings for this specific (name, env) pair to avoid overwrite warnings.
+    for stale_file in run_dir.glob("*.mp4"):
+        stale_file.unlink()
+
+    env = gym.make(env_name, render_mode="rgb_array")
+    env = RecordVideo(
+        env,
+        video_folder=str(run_dir),
+        episode_trigger=lambda episode_id: episode_id == 0,
+        name_prefix=prefix,
+        disable_logger=True,
+    )
+
+    reset_out = env.reset()
+    state = reset_out[0] if isinstance(reset_out, tuple) else reset_out
     done = False
     
     for _ in range(100000):
-        # Intercept Gym's internal state and force it to be a native Python float.
-        # This completely bypasses PyGame's inability to read numpy floats or arrays.
-        if hasattr(env.unwrapped, 'last_u') and env.unwrapped.last_u is not None:
-            # np.squeeze removes array brackets, float() converts to native Python type
-            env.unwrapped.last_u = float(np.squeeze(env.unwrapped.last_u))
-        # -------------------------------
-        
-        vid.capture_frame()
-        
         # Get action from policy
         action, _ = policy.act(state)
-        
-        # Ensure action is a flat numpy array for the env.step() call
+
+        # Convert action to the format expected by the current action space.
         if isinstance(action, torch.Tensor):
             action = action.detach().cpu().numpy()
-        action = np.array(action).flatten()
+        if hasattr(env.action_space, "n"):
+            action = int(np.asarray(action).squeeze())
+        else:
+            action = np.asarray(action).flatten()
         
         # Step environment
-        next_state, _, done, _ = env.step(action)
+        step_out = env.step(action)
+        if isinstance(step_out, tuple) and len(step_out) == 5:
+            next_state, _, terminated, truncated, _ = step_out
+            done = terminated or truncated
+        else:
+            next_state, _, done, _ = step_out
         state = next_state
         if done:
             break
-            
-    vid.close()
+
     env.close()
