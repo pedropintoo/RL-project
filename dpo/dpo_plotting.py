@@ -67,7 +67,11 @@ def plot_environment_results(env_id: str, data: Dict, plot_dir: Path) -> Path:
     plt.xscale("log")
     plt.xticks(k_values, labels=[str(k) for k in k_values])
     plt.grid(True, linestyle=":", alpha=0.7)
-    plt.legend(loc="lower right" if env_id == "CartPole-v1" else "upper left", fontsize=11)
+    legend_loc = {
+        "CartPole-v1": "lower right",
+        "MountainCarContinuous-v0": "lower right",
+    }.get(env_id, "upper left")
+    plt.legend(loc=legend_loc, fontsize=11)
 
     plot_path = plot_dir / f"{env_id}_scaling_plot.png"
     plt.tight_layout()
