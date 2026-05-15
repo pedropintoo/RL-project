@@ -54,7 +54,7 @@ Execute the following 4 scripts in exact order to reproduce the 30-model experim
 
 ### 1. Train the Reward Models
 
-Reads preference `.json` files from `data_generation/` and trains 30 PyTorch Reward Models using the Bradley-Terry loss.
+Reads preference `.json` files from `data_generation/` and trains 30 Reward Models using the Bradley-Terry loss.
 ```bash
 python3 train_reward_model.py
 ```
