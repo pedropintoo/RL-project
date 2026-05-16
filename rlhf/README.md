@@ -78,17 +78,88 @@ python3 plot_results.py
 ```
 
 
+## Wall-Clock Timing Experiment
+
+To measure the computational cost of the full PPO-RLHF pipeline, run the self-contained orchestrator:
+
+```bash
+cd rlhf
+python run_efficiency_experiment.py
+```
+
+This runs three scripts in sequence with the `TIMING_RUN=1` environment variable set:
+
+1. `train_reward_model.py` — trains all reward models and records per-seed wall-clock time in `outputs/efficiency_results/rm_timing.json`
+2. `train_ppo_rlhf.py` — fine-tunes all PPO agents and records per-seed wall-clock time in `outputs/efficiency_results/ppo_timing.json`
+3. `aggregate_efficiency.py` — merges both timing files and saves the final `outputs/efficiency_results/efficiency_results.json` with mean and standard deviation over 5 seeds for each (env, K) pair
+
+**Artifact isolation:** the `TIMING_RUN=1` flag redirects all model artifacts (reward model `.pth` files and PPO `.zip` files) to `outputs/efficiency_results/` subdirectories, so the canonical `outputs/reward_models/` and `outputs/ppo_rlhf_results/beta0.1/` artifacts used by `evaluate_results.py` are never overwritten.
+
+**What is timed:**
+
+* Phase 1 (RM): the full per-seed cost — data loading, 10 training epochs, and model saving.
+* Phase 2 (PPO): only the `active_model.learn()` call, i.e. pure policy optimisation. Setup (loading models, creating the wrapped environment) is excluded so that Phase 2 timing is directly comparable to DPO training time.
+
+### Gradient Steps in the Report Table
+
+In addition to wall-clock time, the report table includes the number of gradient steps for each phase. These are computed analytically from the hyperparameters rather than instrumented at runtime.
+
+**Phase 1 — Reward Model training:**
+
+Each seed trains for a fixed 10 epochs over all K preference pairs, with batch size 1 (one gradient step per pair per epoch):
+
+```text
+Phase 1 grad steps = K × epochs = K × 10
+```
+
+| K    | Grad steps |
+|------|------------|
+| 50   | 500        |
+| 200  | 2,000      |
+| 1000 | 10,000     |
+
+**Phase 2 — PPO fine-tuning (CartPole-v1 and Pendulum-v1):**
+
+The fine-tuning budget is half the expert training budget (`tune_budget = total_timesteps × 0.5`). SB3 PPO collects `n_steps = 2048` environment steps per rollout, then runs `n_epochs = 10` passes over mini-batches of size `batch_size = 64`. The number of gradient steps per rollout is `floor(n_steps / batch_size) × n_epochs = 32 × 10 = 320`, and the number of rollouts is `floor(tune_budget / n_steps)`. Total:
+
+```text
+Phase 2 grad steps (PPO) = floor(tune_budget / n_steps) × floor(n_steps / batch_size) × n_epochs
+                         = floor(tune_budget / 2048) × 32 × 10
+```
+
+| Environment  | tune_budget | Rollouts | Grad steps |
+|--------------|-------------|----------|------------|
+| CartPole-v1  | 50,000      | 24       | 7,680      |
+| Pendulum-v1  | 150,000     | 73       | 23,360     |
+
+**Phase 2 — SAC fine-tuning (MountainCarContinuous-v0):**
+
+MountainCarContinuous uses SAC, which performs one gradient step per environment step by default (`gradient_steps = 1`, `train_freq = 1`):
+
+```text
+Phase 2 grad steps (SAC) = tune_budget × gradient_steps = tune_budget × 1
+```
+
+| Environment              | tune_budget | Grad steps |
+|--------------------------|-------------|------------|
+| MountainCarContinuous-v0 | 25,000      | 25,000     |
+
+Note that Phase 2 grad steps are identical across all three K values within each environment, because the fine-tuning budget depends only on `total_timesteps` (an environment-level constant), not on the dataset size K. This confirms that Phase 2 cost is fixed and only Phase 1 scales with K.
+
 ## $\beta$ Ablation Study
 
-To understand how the KL penalty coefficient ($\beta$) affects the policy's ability to maximize the reward model without drifting too far from the reference anchor, we include an automated ablation study. 
+To understand how the KL penalty coefficient ($\beta$) affects the policy's ability to maximize the reward model without drifting too far from the reference anchor, we include an automated ablation study.
 
 Once you have successfully trained the Reward Models (Step 1 above), you can run the entire ablation study using the orchestrator:
+
 ```bash
 python3 run_beta_ablation.py
 ```
+
 This script sequentially executes `train_ppo_rlhf.py` and `evaluate_results.py` across a predefined list of beta values (e.g., `[0.01, 0.1, 0.5, 2.0]`), dynamically routing the outputs into their respective beta folders.
 
 To generate the comparison graphs overlaying all tested $\beta$ values:
+
 ```bash
 python3 plot_beta_ablation.py
 ```

@@ -1,4 +1,6 @@
 import json
+import math
+import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -365,6 +367,8 @@ def run_dpo_scaling_experiment(
             print(f"Training DPO for K={k}, seed={seed}...")
             _max_t_map = {"CartPole-v1": 500, "Pendulum-v1": 200, "MountainCarContinuous-v0": 999}
             max_t = _max_t_map.get(env_id, 500)
+
+            t_start = time.perf_counter()
             scores, eval_curve = train_dpo(
                 policy_model=policy_model,
                 reference_model=reference_model,
@@ -383,6 +387,10 @@ def run_dpo_scaling_experiment(
                 max_t=max_t,
                 batch_size=hp["batch_size"],
             )
+            wall_clock_s = round(time.perf_counter() - t_start, 3)
+            # Exact gradient steps: one optimizer.step() per batch per epoch.
+            # len(scores) == actual epochs run (accounts for early stopping).
+            grad_steps = len(scores) * math.ceil(k / hp["batch_size"])
 
             # Use the best-checkpoint return when available (env-eval-based selection),
             # otherwise fall back to a final evaluation of the restored policy.
@@ -409,6 +417,11 @@ def run_dpo_scaling_experiment(
                         "final_loss": float(scores[-1]) if scores else None,
                         "mean_return": float(mean_r),
                         "eval_curve": eval_curve,
+                        # Efficiency metrics — wall_clock_s covers the full train_dpo()
+                        # call (training + env evaluations for checkpoint selection).
+                        # grad_steps is exact: epochs_ran × ceil(K / batch_size).
+                        "wall_clock_s": wall_clock_s,
+                        "grad_steps": grad_steps,
                     },
                     f,
                     indent=2,

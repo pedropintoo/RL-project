@@ -1,5 +1,5 @@
 import numpy as np
-import gym
+import gymnasium as gym
 import torch
 import torch.nn.functional as F
 from torch import nn
