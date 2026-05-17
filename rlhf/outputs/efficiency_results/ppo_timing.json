@@ -1,0 +1,206 @@
+{
+    "CartPole-v1": {
+        "50": {
+            "1": {
+                "time_s": 78.838,
+                "grad_steps": 8000
+            },
+            "2": {
+                "time_s": 79.383,
+                "grad_steps": 7680
+            },
+            "3": {
+                "time_s": 56.426,
+                "grad_steps": 7680
+            },
+            "4": {
+                "time_s": 56.583,
+                "grad_steps": 7680
+            },
+            "5": {
+                "time_s": 82.462,
+                "grad_steps": 8000
+            }
+        },
+        "200": {
+            "1": {
+                "time_s": 82.864,
+                "grad_steps": 7680
+            },
+            "2": {
+                "time_s": 74.033,
+                "grad_steps": 8000
+            },
+            "3": {
+                "time_s": 83.218,
+                "grad_steps": 7680
+            },
+            "4": {
+                "time_s": 69.6,
+                "grad_steps": 8000
+            },
+            "5": {
+                "time_s": 76.512,
+                "grad_steps": 8000
+            }
+        },
+        "1000": {
+            "1": {
+                "time_s": 85.387,
+                "grad_steps": 7680
+            },
+            "2": {
+                "time_s": 73.808,
+                "grad_steps": 8000
+            },
+            "3": {
+                "time_s": 57.399,
+                "grad_steps": 7680
+            },
+            "4": {
+                "time_s": 78.542,
+                "grad_steps": 8000
+            },
+            "5": {
+                "time_s": 77.589,
+                "grad_steps": 8000
+            }
+        }
+    },
+    "Pendulum-v1": {
+        "50": {
+            "1": {
+                "time_s": 140.765,
+                "grad_steps": 23680
+            },
+            "2": {
+                "time_s": 139.883,
+                "grad_steps": 23680
+            },
+            "3": {
+                "time_s": 138.699,
+                "grad_steps": 23680
+            },
+            "4": {
+                "time_s": 137.856,
+                "grad_steps": 23680
+            },
+            "5": {
+                "time_s": 141.374,
+                "grad_steps": 23680
+            }
+        },
+        "200": {
+            "1": {
+                "time_s": 136.477,
+                "grad_steps": 23680
+            },
+            "2": {
+                "time_s": 136.508,
+                "grad_steps": 23680
+            },
+            "3": {
+                "time_s": 136.533,
+                "grad_steps": 23680
+            },
+            "4": {
+                "time_s": 138.495,
+                "grad_steps": 23360
+            },
+            "5": {
+                "time_s": 134.991,
+                "grad_steps": 23680
+            }
+        },
+        "1000": {
+            "1": {
+                "time_s": 138.798,
+                "grad_steps": 23680
+            },
+            "2": {
+                "time_s": 139.442,
+                "grad_steps": 23680
+            },
+            "3": {
+                "time_s": 133.771,
+                "grad_steps": 23680
+            },
+            "4": {
+                "time_s": 137.698,
+                "grad_steps": 23680
+            },
+            "5": {
+                "time_s": 135.573,
+                "grad_steps": 23680
+            }
+        }
+    },
+    "MountainCarContinuous-v0": {
+        "50": {
+            "1": {
+                "time_s": 214.67,
+                "grad_steps": 24992
+            },
+            "2": {
+                "time_s": 208.472,
+                "grad_steps": 24992
+            },
+            "3": {
+                "time_s": 196.579,
+                "grad_steps": 24992
+            },
+            "4": {
+                "time_s": 196.136,
+                "grad_steps": 24992
+            },
+            "5": {
+                "time_s": 225.666,
+                "grad_steps": 24992
+            }
+        },
+        "200": {
+            "1": {
+                "time_s": 204.185,
+                "grad_steps": 24992
+            },
+            "2": {
+                "time_s": 202.315,
+                "grad_steps": 24992
+            },
+            "3": {
+                "time_s": 196.249,
+                "grad_steps": 24992
+            },
+            "4": {
+                "time_s": 200.819,
+                "grad_steps": 25024
+            },
+            "5": {
+                "time_s": 218.924,
+                "grad_steps": 24992
+            }
+        },
+        "1000": {
+            "1": {
+                "time_s": 216.491,
+                "grad_steps": 25024
+            },
+            "2": {
+                "time_s": 228.676,
+                "grad_steps": 24992
+            },
+            "3": {
+                "time_s": 201.241,
+                "grad_steps": 25024
+            },
+            "4": {
+                "time_s": 232.905,
+                "grad_steps": 24992
+            },
+            "5": {
+                "time_s": 221.55,
+                "grad_steps": 25024
+            }
+        }
+    }
+}
