@@ -13,6 +13,7 @@ sys.path.append(str(data_gen_path))
 
 from config import PREFERENCE_DIR, ENVIRONMENTS, DATASET_SIZES
 from reward_model import RewardModel
+from rm_config import RM_TRAIN_CONFIG
 
 # Force PyTorch CUDA initialisation once at import time so that the one-time
 # ~4s overhead does not inflate the first seed's timing measurement.
@@ -127,8 +128,12 @@ if __name__ == "__main__":
 
     for cfg in ENVIRONMENTS:
         all_timing[cfg.env_id] = {}
+        rm_cfg = RM_TRAIN_CONFIG[cfg.env_id]
         for K in DATASET_SIZES:
-            seed_times = train_reward_model_for_k(cfg.env_id, K, num_seeds=5)
+            seed_times = train_reward_model_for_k(
+                cfg.env_id, K, num_seeds=5,
+                epochs=rm_cfg["epochs"], lr=rm_cfg["lr"],
+            )
             all_timing[cfg.env_id][str(K)] = seed_times
 
     timing_path = TIMING_DIR / "rm_timing.json"
