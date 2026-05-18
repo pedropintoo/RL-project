@@ -1,0 +1,1335 @@
+{
+  "CartPole-v1": {
+    "baselines": {
+      "expert": {
+        "mean": 500.0,
+        "std": 0.0
+      },
+      "mid": {
+        "mean": 389.58,
+        "std": 181.6533060530416
+      }
+    },
+    "dpo": {
+      "50": {
+        "mean": 460.52,
+        "std": 78.96,
+        "raw_seeds": [
+          500.0,
+          302.6,
+          500.0,
+          500.0,
+          500.0
+        ]
+      },
+      "200": {
+        "mean": 500.0,
+        "std": 0.0,
+        "raw_seeds": [
+          500.0,
+          500.0,
+          500.0,
+          500.0,
+          500.0
+        ]
+      },
+      "1000": {
+        "mean": 500.0,
+        "std": 0.0,
+        "raw_seeds": [
+          500.0,
+          500.0,
+          500.0,
+          500.0,
+          500.0
+        ]
+      }
+    },
+    "training_curves": {
+      "50": {
+        "epochs": [
+          0,
+          5,
+          10,
+          15,
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50,
+          55,
+          60,
+          65,
+          70
+        ],
+        "mean_returns": [
+          330.35,
+          362.21999999999997,
+          398.77000000000004,
+          390.66999999999996,
+          406.31,
+          406.03000000000003,
+          390.6,
+          395.69,
+          387.8,
+          399.98,
+          423.23,
+          414.16999999999996,
+          417.1,
+          416.89,
+          354.61249999999995
+        ],
+        "std_returns": [
+          36.647182702085026,
+          127.807983318727,
+          134.6157962499201,
+          151.96654105427288,
+          164.52488079314935,
+          146.81398979661304,
+          162.92114963994086,
+          157.9177773399816,
+          157.44256095478121,
+          159.49576984986152,
+          153.54000000000002,
+          156.52712097269279,
+          163.58407929868972,
+          160.11645886666366,
+          160.38028781228073
+        ],
+        "per_seed": [
+          [
+            {
+              "epoch": 0,
+              "mean_return": 335.3
+            },
+            {
+              "epoch": 5,
+              "mean_return": 383.3
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 70,
+              "mean_return": 384.85
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 302.6
+            },
+            {
+              "epoch": 5,
+              "mean_return": 119.85
+            },
+            {
+              "epoch": 10,
+              "mean_return": 147.45
+            },
+            {
+              "epoch": 15,
+              "mean_return": 113.05
+            },
+            {
+              "epoch": 20,
+              "mean_return": 79.35
+            },
+            {
+              "epoch": 25,
+              "mean_return": 120.95
+            },
+            {
+              "epoch": 30,
+              "mean_return": 79.95
+            },
+            {
+              "epoch": 35,
+              "mean_return": 92.45
+            },
+            {
+              "epoch": 40,
+              "mean_return": 98.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 88.45
+            },
+            {
+              "epoch": 50,
+              "mean_return": 116.15
+            },
+            {
+              "epoch": 55,
+              "mean_return": 102.05
+            },
+            {
+              "epoch": 60,
+              "mean_return": 89.95
+            },
+            {
+              "epoch": 65,
+              "mean_return": 96.8
+            },
+            {
+              "epoch": 70,
+              "mean_return": 85.95
+            },
+            {
+              "epoch": 75,
+              "mean_return": 104.65
+            },
+            {
+              "epoch": 80,
+              "mean_return": 134.3
+            },
+            {
+              "epoch": 85,
+              "mean_return": 118.7
+            },
+            {
+              "epoch": 90,
+              "mean_return": 72.75
+            },
+            {
+              "epoch": 95,
+              "mean_return": 90.75
+            },
+            {
+              "epoch": 100,
+              "mean_return": 93.45
+            },
+            {
+              "epoch": 105,
+              "mean_return": 88.8
+            },
+            {
+              "epoch": 110,
+              "mean_return": 93.8
+            },
+            {
+              "epoch": 115,
+              "mean_return": 92.4
+            },
+            {
+              "epoch": 120,
+              "mean_return": 96.4
+            },
+            {
+              "epoch": 125,
+              "mean_return": 77.4
+            },
+            {
+              "epoch": 130,
+              "mean_return": 87.3
+            },
+            {
+              "epoch": 135,
+              "mean_return": 45.6
+            },
+            {
+              "epoch": 140,
+              "mean_return": 44.0
+            },
+            {
+              "epoch": 145,
+              "mean_return": 33.85
+            },
+            {
+              "epoch": 150,
+              "mean_return": 59.2
+            },
+            {
+              "epoch": 155,
+              "mean_return": 37.85
+            },
+            {
+              "epoch": 160,
+              "mean_return": 34.9
+            },
+            {
+              "epoch": 165,
+              "mean_return": 37.15
+            },
+            {
+              "epoch": 170,
+              "mean_return": 41.2
+            },
+            {
+              "epoch": 175,
+              "mean_return": 34.8
+            },
+            {
+              "epoch": 180,
+              "mean_return": 42.65
+            },
+            {
+              "epoch": 185,
+              "mean_return": 39.8
+            },
+            {
+              "epoch": 190,
+              "mean_return": 50.8
+            },
+            {
+              "epoch": 195,
+              "mean_return": 38.95
+            },
+            {
+              "epoch": 200,
+              "mean_return": 29.95
+            },
+            {
+              "epoch": 205,
+              "mean_return": 32.9
+            },
+            {
+              "epoch": 210,
+              "mean_return": 38.75
+            },
+            {
+              "epoch": 215,
+              "mean_return": 31.25
+            },
+            {
+              "epoch": 220,
+              "mean_return": 38.2
+            },
+            {
+              "epoch": 225,
+              "mean_return": 31.75
+            },
+            {
+              "epoch": 230,
+              "mean_return": 34.35
+            },
+            {
+              "epoch": 235,
+              "mean_return": 34.5
+            },
+            {
+              "epoch": 240,
+              "mean_return": 34.1
+            },
+            {
+              "epoch": 245,
+              "mean_return": 36.55
+            },
+            {
+              "epoch": 250,
+              "mean_return": 29.0
+            },
+            {
+              "epoch": 255,
+              "mean_return": 28.25
+            },
+            {
+              "epoch": 260,
+              "mean_return": 28.35
+            },
+            {
+              "epoch": 265,
+              "mean_return": 27.85
+            },
+            {
+              "epoch": 270,
+              "mean_return": 40.25
+            },
+            {
+              "epoch": 275,
+              "mean_return": 31.55
+            },
+            {
+              "epoch": 280,
+              "mean_return": 25.55
+            },
+            {
+              "epoch": 285,
+              "mean_return": 41.05
+            },
+            {
+              "epoch": 290,
+              "mean_return": 38.45
+            },
+            {
+              "epoch": 295,
+              "mean_return": 29.1
+            },
+            {
+              "epoch": 300,
+              "mean_return": 29.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 378.8
+            },
+            {
+              "epoch": 5,
+              "mean_return": 406.85
+            },
+            {
+              "epoch": 10,
+              "mean_return": 476.85
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 70,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 75,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 277.25
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 357.8
+            },
+            {
+              "epoch": 5,
+              "mean_return": 401.1
+            },
+            {
+              "epoch": 10,
+              "mean_return": 369.55
+            },
+            {
+              "epoch": 15,
+              "mean_return": 340.3
+            },
+            {
+              "epoch": 20,
+              "mean_return": 452.2
+            },
+            {
+              "epoch": 25,
+              "mean_return": 409.2
+            },
+            {
+              "epoch": 30,
+              "mean_return": 373.05
+            },
+            {
+              "epoch": 35,
+              "mean_return": 386.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 341.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 411.45
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 468.8
+            },
+            {
+              "epoch": 60,
+              "mean_return": 495.55
+            },
+            {
+              "epoch": 65,
+              "mean_return": 487.65
+            },
+            {
+              "epoch": 70,
+              "mean_return": 447.65
+            },
+            {
+              "epoch": 75,
+              "mean_return": 454.95
+            },
+            {
+              "epoch": 80,
+              "mean_return": 459.6
+            },
+            {
+              "epoch": 85,
+              "mean_return": 488.25
+            },
+            {
+              "epoch": 90,
+              "mean_return": 469.0
+            },
+            {
+              "epoch": 95,
+              "mean_return": 108.05
+            },
+            {
+              "epoch": 100,
+              "mean_return": 178.7
+            },
+            {
+              "epoch": 105,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 110,
+              "mean_return": 500.0
+            }
+          ]
+        ]
+      },
+      "200": {
+        "epochs": [
+          0,
+          5,
+          10,
+          15,
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50,
+          55,
+          60,
+          65,
+          70
+        ],
+        "mean_returns": [
+          393.90999999999997,
+          437.01000000000005,
+          492.03000000000003,
+          500.0,
+          500.0,
+          500.0,
+          500.0,
+          500.0,
+          454.86,
+          496.91999999999996,
+          477.02,
+          440.28000000000003,
+          500.0,
+          500.0,
+          448.7
+        ],
+        "std_returns": [
+          32.345562292221786,
+          90.79717176212043,
+          15.94000000000001,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          90.27999999999999,
+          6.15999999999999,
+          45.95999999999999,
+          119.44,
+          0.0,
+          0.0,
+          72.54915574973977
+        ],
+        "per_seed": [
+          [
+            {
+              "epoch": 0,
+              "mean_return": 356.8
+            },
+            {
+              "epoch": 5,
+              "mean_return": 427.7
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 70,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 357.95
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 416.85
+            },
+            {
+              "epoch": 5,
+              "mean_return": 263.8
+            },
+            {
+              "epoch": 10,
+              "mean_return": 460.15
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 70,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 75,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 399.25
+            },
+            {
+              "epoch": 5,
+              "mean_return": 493.55
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 274.3
+            },
+            {
+              "epoch": 45,
+              "mean_return": 484.6
+            },
+            {
+              "epoch": 50,
+              "mean_return": 385.1
+            },
+            {
+              "epoch": 55,
+              "mean_return": 201.4
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 70,
+              "mean_return": 346.1
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 438.7
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ]
+        ]
+      },
+      "1000": {
+        "epochs": [
+          0,
+          5,
+          10,
+          15,
+          20,
+          25,
+          30,
+          35,
+          40,
+          45,
+          50,
+          55,
+          60,
+          65
+        ],
+        "mean_returns": [
+          394.71999999999997,
+          500.0,
+          500.0,
+          500.0,
+          500.0,
+          466.96999999999997,
+          354.29,
+          434.98,
+          462.76000000000005,
+          447.43999999999994,
+          455.21999999999997,
+          500.0,
+          500.0,
+          500.0
+        ],
+        "std_returns": [
+          28.937321921698278,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          66.05999999999999,
+          137.35082234919457,
+          120.57433226022859,
+          61.23308256163492,
+          105.12,
+          89.55999999999999,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "per_seed": [
+          [
+            {
+              "epoch": 0,
+              "mean_return": 361.05
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 379.3
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 232.1
+            },
+            {
+              "epoch": 35,
+              "mean_return": 480.6
+            },
+            {
+              "epoch": 40,
+              "mean_return": 342.3
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 418.7
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 382.05
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 438.3
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 30,
+              "mean_return": 496.1
+            },
+            {
+              "epoch": 35,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 40,
+              "mean_return": 471.5
+            },
+            {
+              "epoch": 45,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 50,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ],
+          [
+            {
+              "epoch": 0,
+              "mean_return": 376.25
+            },
+            {
+              "epoch": 5,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 10,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 15,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 20,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 25,
+              "mean_return": 334.85
+            },
+            {
+              "epoch": 30,
+              "mean_return": 161.2
+            },
+            {
+              "epoch": 35,
+              "mean_return": 194.3
+            },
+            {
+              "epoch": 40,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 45,
+              "mean_return": 237.2
+            },
+            {
+              "epoch": 50,
+              "mean_return": 276.1
+            },
+            {
+              "epoch": 55,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 60,
+              "mean_return": 500.0
+            },
+            {
+              "epoch": 65,
+              "mean_return": 500.0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

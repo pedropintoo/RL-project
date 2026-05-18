@@ -146,7 +146,7 @@ def run_ppo_rlhf(cfg, K: int, num_seeds: int = 5):
         )
 
         # 6. Train — timed end-to-end (training + eval overhead), matching DPO timing.
-        tune_budget = int(cfg.total_timesteps * 0.5)
+        tune_budget = cfg.total_timesteps
         run_name = f"{cfg.env_id}_K{K}_seed{seed}"
 
         t_start = time.perf_counter()

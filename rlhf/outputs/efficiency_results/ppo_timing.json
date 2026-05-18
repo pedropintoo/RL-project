@@ -2,204 +2,204 @@
     "CartPole-v1": {
         "50": {
             "1": {
-                "time_s": 78.838,
-                "grad_steps": 8000
+                "time_s": 91.254,
+                "grad_steps": 8640
             },
             "2": {
-                "time_s": 79.383,
-                "grad_steps": 7680
+                "time_s": 93.721,
+                "grad_steps": 8320
             },
             "3": {
-                "time_s": 56.426,
+                "time_s": 83.052,
                 "grad_steps": 7680
             },
             "4": {
-                "time_s": 56.583,
-                "grad_steps": 7680
+                "time_s": 90.572,
+                "grad_steps": 8320
             },
             "5": {
-                "time_s": 82.462,
-                "grad_steps": 8000
+                "time_s": 95.455,
+                "grad_steps": 7680
             }
         },
         "200": {
             "1": {
-                "time_s": 82.864,
-                "grad_steps": 7680
+                "time_s": 119.586,
+                "grad_steps": 11200
             },
             "2": {
-                "time_s": 74.033,
-                "grad_steps": 8000
-            },
-            "3": {
-                "time_s": 83.218,
+                "time_s": 91.479,
                 "grad_steps": 7680
             },
+            "3": {
+                "time_s": 97.841,
+                "grad_steps": 8640
+            },
             "4": {
-                "time_s": 69.6,
-                "grad_steps": 8000
+                "time_s": 87.588,
+                "grad_steps": 7680
             },
             "5": {
-                "time_s": 76.512,
-                "grad_steps": 8000
+                "time_s": 93.624,
+                "grad_steps": 7680
             }
         },
         "1000": {
             "1": {
-                "time_s": 85.387,
+                "time_s": 86.122,
                 "grad_steps": 7680
             },
             "2": {
-                "time_s": 73.808,
-                "grad_steps": 8000
+                "time_s": 92.126,
+                "grad_steps": 7680
             },
             "3": {
-                "time_s": 57.399,
+                "time_s": 79.546,
                 "grad_steps": 7680
             },
             "4": {
-                "time_s": 78.542,
-                "grad_steps": 8000
+                "time_s": 82.629,
+                "grad_steps": 8320
             },
             "5": {
-                "time_s": 77.589,
-                "grad_steps": 8000
+                "time_s": 96.083,
+                "grad_steps": 8320
             }
         }
     },
     "Pendulum-v1": {
         "50": {
             "1": {
-                "time_s": 140.765,
-                "grad_steps": 23680
+                "time_s": 141.39,
+                "grad_steps": 23360
             },
             "2": {
-                "time_s": 139.883,
-                "grad_steps": 23680
+                "time_s": 180.766,
+                "grad_steps": 28800
             },
             "3": {
-                "time_s": 138.699,
-                "grad_steps": 23680
+                "time_s": 145.859,
+                "grad_steps": 25600
             },
             "4": {
-                "time_s": 137.856,
-                "grad_steps": 23680
+                "time_s": 149.265,
+                "grad_steps": 26560
             },
             "5": {
-                "time_s": 141.374,
-                "grad_steps": 23680
+                "time_s": 140.488,
+                "grad_steps": 24960
             }
         },
         "200": {
             "1": {
-                "time_s": 136.477,
-                "grad_steps": 23680
+                "time_s": 135.37,
+                "grad_steps": 24000
             },
             "2": {
-                "time_s": 136.508,
-                "grad_steps": 23680
+                "time_s": 165.732,
+                "grad_steps": 28800
             },
             "3": {
-                "time_s": 136.533,
-                "grad_steps": 23680
+                "time_s": 175.34,
+                "grad_steps": 28800
             },
             "4": {
-                "time_s": 138.495,
-                "grad_steps": 23360
+                "time_s": 238.424,
+                "grad_steps": 41280
             },
             "5": {
-                "time_s": 134.991,
-                "grad_steps": 23680
+                "time_s": 170.983,
+                "grad_steps": 30400
             }
         },
         "1000": {
             "1": {
-                "time_s": 138.798,
-                "grad_steps": 23680
+                "time_s": 166.324,
+                "grad_steps": 29440
             },
             "2": {
-                "time_s": 139.442,
-                "grad_steps": 23680
+                "time_s": 165.346,
+                "grad_steps": 29440
             },
             "3": {
-                "time_s": 133.771,
-                "grad_steps": 23680
+                "time_s": 233.142,
+                "grad_steps": 41280
             },
             "4": {
-                "time_s": 137.698,
-                "grad_steps": 23680
+                "time_s": 109.794,
+                "grad_steps": 19520
             },
             "5": {
-                "time_s": 135.573,
-                "grad_steps": 23680
+                "time_s": 171.522,
+                "grad_steps": 30400
             }
         }
     },
     "MountainCarContinuous-v0": {
         "50": {
             "1": {
-                "time_s": 214.67,
+                "time_s": 181.688,
                 "grad_steps": 24992
             },
             "2": {
-                "time_s": 208.472,
+                "time_s": 181.2,
                 "grad_steps": 24992
             },
             "3": {
-                "time_s": 196.579,
-                "grad_steps": 24992
+                "time_s": 276.321,
+                "grad_steps": 38976
             },
             "4": {
-                "time_s": 196.136,
-                "grad_steps": 24992
+                "time_s": 245.277,
+                "grad_steps": 36000
             },
             "5": {
-                "time_s": 225.666,
+                "time_s": 218.703,
                 "grad_steps": 24992
             }
         },
         "200": {
             "1": {
-                "time_s": 204.185,
+                "time_s": 189.123,
                 "grad_steps": 24992
             },
             "2": {
-                "time_s": 202.315,
-                "grad_steps": 24992
+                "time_s": 263.349,
+                "grad_steps": 36000
             },
             "3": {
-                "time_s": 196.249,
+                "time_s": 208.287,
                 "grad_steps": 24992
             },
             "4": {
-                "time_s": 200.819,
-                "grad_steps": 25024
+                "time_s": 194.07,
+                "grad_steps": 24992
             },
             "5": {
-                "time_s": 218.924,
+                "time_s": 207.169,
                 "grad_steps": 24992
             }
         },
         "1000": {
             "1": {
-                "time_s": 216.491,
-                "grad_steps": 25024
-            },
-            "2": {
-                "time_s": 228.676,
+                "time_s": 207.57,
                 "grad_steps": 24992
             },
+            "2": {
+                "time_s": 267.505,
+                "grad_steps": 34976
+            },
             "3": {
-                "time_s": 201.241,
-                "grad_steps": 25024
+                "time_s": 200.724,
+                "grad_steps": 24992
             },
             "4": {
-                "time_s": 232.905,
+                "time_s": 231.777,
                 "grad_steps": 24992
             },
             "5": {
-                "time_s": 221.55,
-                "grad_steps": 25024
+                "time_s": 230.098,
+                "grad_steps": 24992
             }
         }
     }
