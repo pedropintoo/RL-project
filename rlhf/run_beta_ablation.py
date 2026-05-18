@@ -6,10 +6,11 @@ BETAS = [0.01, 0.1, 0.5, 2.0] # You can adjust this list to include more or fewe
 def run_experiment():
     for beta in BETAS:
         print(f"\nSTARTING ABLATION: BETA = {beta}")
-        
+
         # Set the environment variable for this sub-process
         env = os.environ.copy()
         env["RLHF_BETA"] = str(beta)
+        env["ABLATION_RUN"] = "1"  # prevents train_ppo_rlhf.py from overwriting ppo_timing.json
         
         # 1. Train PPO Agents for this beta
         print(f"--- Training PPO (Beta={beta}) ---")

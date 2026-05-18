@@ -182,7 +182,8 @@ if __name__ == "__main__":
         for K in DATASET_SIZES:
             all_timing[cfg.env_id][str(K)] = run_ppo_rlhf(cfg, K, num_seeds=5)
 
-    timing_path = TIMING_DIR / "ppo_timing.json"
-    with open(timing_path, "w") as f:
-        json.dump(all_timing, f, indent=4)
-    print(f"\nSaved Phase 2 (PPO) timing to {timing_path}")
+    if os.environ.get("ABLATION_RUN", "0") != "1":
+        timing_path = TIMING_DIR / "ppo_timing.json"
+        with open(timing_path, "w") as f:
+            json.dump(all_timing, f, indent=4)
+        print(f"\nSaved Phase 2 (PPO) timing to {timing_path}")
