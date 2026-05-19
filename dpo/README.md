@@ -68,7 +68,7 @@ RUN_CONFIG = {
         "algo": "SAC",
         "default": {
             "lr": 1e-3, "beta": 0.4, "kl_coef": 0.4,
-            "n_epochs": 50, "plateau_window": 10, "early_stop": True, "eval_every": 5,
+            "n_epochs": 300, "plateau_window": 12, "early_stop": True, "eval_every": 5,
         },
         50:   {"batch_size": 2},
         200:  {"batch_size": 8},
@@ -129,7 +129,7 @@ The number of gradient steps per epoch equals $K / \text{batch\_size}$. With per
 
 With return-based checkpoint selection, the epoch budget (`n_epochs`) is an upper bound rather than an exact training length. Early stopping (`early_stop = True`) halts training when the evaluated return has not exceeded the best seen return for `plateau_window` consecutive evaluations (each evaluation covering `eval_every` epochs).
 
-For CartPole, `plateau_window = 12` gives 60 epochs of patience — enough to avoid premature stopping on a discrete environment where returns can dip temporarily. For Pendulum, `plateau_window = 2` is sufficient because the dense reward signal makes learning steady once it begins; longer patience would waste compute after the policy has converged. For MountainCar, `plateau_window = 10` is needed because the sparse reward makes progress intermittent: the policy can plateau for many evaluations while slowly building the momentum exploitation required to reach the goal.
+For CartPole, `plateau_window = 12` gives 60 epochs of patience — enough to avoid premature stopping on a discrete environment where returns can dip temporarily. For Pendulum, `plateau_window = 2` is sufficient because the dense reward signal makes learning steady once it begins; longer patience would waste compute after the policy has converged. For MountainCar, `plateau_window = 12` is needed because the sparse reward makes progress intermittent: the policy can plateau for many evaluations while slowly building the momentum exploitation required to reach the goal.
 
 ---
 
@@ -159,7 +159,7 @@ All numbers below are averaged over 5 independent seeds.
 |---|---|---|---|---|---|
 | CartPole-v1 | 360.9 | 500.0 | **500.0 ± 0.0** | **500.0 ± 0.0** | **500.0 ± 0.0** |
 | Pendulum-v1 | −644.7 | −340.0 | **−179.3 ± 14.8** | **−179.7 ± 10.4** | **−156.2 ± 8.3** |
-| MountainCarContinuous-v0 | 64.1 | 94.8 | **94.0 ± 0.2** | **93.8 ± 0.4** | **94.0 ± 0.3** |
+| MountainCarContinuous-v0 | 61.6 | 94.4 | **92.9 ± 0.6** | **92.8 ± 0.3** | **92.9 ± 0.3** |
 
 ### Interpretation
 
@@ -167,4 +167,4 @@ All numbers below are averaged over 5 independent seeds.
 
 **Pendulum-v1 (continuous, dense):** DPO not only surpasses the mid-anchor policy but also surpasses the expert baseline at every K value. The expert policy ($\pi_1$) achieves −340, while DPO at K=50 already reaches −179 — nearly twice as good. This is a case where DPO's direct fine-tuning signal from preferences is more powerful than the PPO-RLHF pipeline, which must learn an intermediate reward model. Variance is also low (≤ 15 across seeds), indicating stable training. PPO-RLHF reaches −187 only at K=1000.
 
-**MountainCarContinuous-v0 (continuous, sparse, SAC):** Despite the sparse reward and the noisy preference signal, DPO reaches near-expert performance (≈94 vs expert 94.8) at all K values, with remarkably low variance (std ≤ 0.4). PPO-RLHF on the same environment is highly unstable (std up to 45), often failing to improve over the mid-anchor policy. The strong KL regularisation and higher preference temperature used here were critical: earlier configurations with lower `kl_coef` caused the policy to overfit to the action-penalty noise in uninformative pairs and collapse.
+**MountainCarContinuous-v0 (continuous, sparse, SAC):** Despite the sparse reward and the noisy preference signal, DPO reaches near-expert performance (≈92.9 vs expert 94.4) at all K values, with low variance (std ≤ 0.6). PPO-RLHF on the same environment is highly unstable (std up to 45), often failing to improve over the mid-anchor policy. The strong KL regularisation and higher preference temperature used here were critical: earlier configurations with lower `kl_coef` caused the policy to overfit to the action-penalty noise in uninformative pairs and collapse.

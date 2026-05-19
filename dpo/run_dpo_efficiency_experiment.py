@@ -11,8 +11,10 @@ Usage
 -----
     cd dpo
     python run_dpo_efficiency_experiment.py
+    python run_dpo_efficiency_experiment.py --env MountainCarContinuous-v0
 """
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -76,7 +78,7 @@ RUN_CONFIG = {
             "beta": 0.4,
             "kl_coef": 0.4,
             "batch_size": 1,
-            "n_epochs": 50,
+            "n_epochs": 300,
             "plateau_window": 12,
             "early_stop": True,
             "eval_every": 5,
@@ -88,10 +90,13 @@ RUN_CONFIG = {
 }
 
 
-def run():
+def run(envs=None):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    for env_id in RUN_CONFIG:
+    targets = envs if envs else list(RUN_CONFIG.keys())
+    for env_id in targets:
+        if env_id not in RUN_CONFIG:
+            raise ValueError(f"Unknown env '{env_id}'. Choose from: {list(RUN_CONFIG.keys())}")
         print(f"\n{'=' * 60}")
         print(f"  DPO efficiency experiment: {env_id}")
         print(f"{'=' * 60}\n")
@@ -114,4 +119,9 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--env", nargs="+", metavar="ENV",
+                        help="Run only the specified environment(s). "
+                             "E.g. --env MountainCarContinuous-v0")
+    args = parser.parse_args()
+    run(envs=args.env)
