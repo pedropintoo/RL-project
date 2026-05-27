@@ -8,7 +8,7 @@
 
 ## Goal
 
-This project compares twopreference-learning algorithms — **PPO-RLHF** and **Direct Preference Optimisation (DPO)** — on three classical Gymnasium control environments. Both methods fine-tune a mid-performing policy using only a dataset of labelled trajectory-pair preferences. The key research question is how sample efficiency, stability and final performance scale with the number of preference pairs K ∈ {50, 200, 1000} across environments that differ in action geometry and reward density.
+This project compares two preference-learning algorithms — **PPO-RLHF** and **Direct Preference Optimisation (DPO)** — on three classical Gymnasium control environments. Both methods fine-tune a mid-performing policy using only a dataset of labelled trajectory-pair preferences. The key research question is how sample efficiency, stability and final performance scale with the number of preference pairs K ∈ {50, 200, 1000} across environments that differ in action geometry and reward density.
 
 ---
 
