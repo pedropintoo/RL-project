@@ -18,7 +18,7 @@ This project compares twopreference-learning algorithms — **PPO-RLHF** and **D
 
 **Figure 2. The three Gymnasium environments used in this study.**
 
-![Table 1. Per-environment setup and expert returns.](assets/table1.png)
+![Table 1. Per-environment setup and expert returns.](assets/environments_setup.png)
 
 **Table 1. Per-environment setup and expert returns.**
 
@@ -26,11 +26,11 @@ This project compares twopreference-learning algorithms — **PPO-RLHF** and **D
 
 ## Main Results
 
-![Table 2. True environment return (mean ± std, 5 seeds).](assets/table2.png)
+![Table 2. True environment return (mean ± std, 5 seeds).](assets/performance_results.png)
 
 **Table 2. True environment return (mean ± std, 5 seeds).** Best result in each cell is bolded. On CartPole, PPO-RLHF wins at K=50, DPO wins at K=200, and both tie at K=1000. DPO outperforms PPO-RLHF on Pendulum at every K. SAC-RLHF dominates DPO on MountainCar at all K, marginally exceeding the expert return (94.3) at every dataset size. Notably, both methods surpass the Pendulum expert.
 
-![Table 3. Computational cost.](assets/table3.png)
+![Table 3. Computational cost.](assets/computational_cost.png)
 
 **Table 3. Computational cost.** Best result per row is bolded. Phases 1 and 2 are PPO-RLHF stages (reward model and policy training). PPO-RLHF needs 3–11× more gradient steps than DPO. DPO's sample efficiency translates to a 1.3–5× wall-clock advantage at small K; at K=1000, DPO's per-epoch cost scales with dataset size which erases this advantage and makes PPO-RLHF 1.6–2.3× faster. PPO-RLHF Phase 2, the most time-consuming phase, is not affected this way because its per-step cost is independent of K.
 
