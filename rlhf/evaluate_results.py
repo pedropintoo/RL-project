@@ -46,7 +46,7 @@ def evaluate_agent(model_path: Path, env_id: str, algo: str, n_episodes: int = 5
 def run_all_evaluations():
     results = {}
     
-    # --- NEW: Load existing results if the file already exists ---
+    # --- Load existing results if the file already exists ---
     if EVAL_FILE.exists():
         print(f"Loading existing data from {EVAL_FILE}...")
         with open(EVAL_FILE, "r") as f:

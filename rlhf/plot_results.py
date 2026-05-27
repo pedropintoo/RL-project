@@ -70,7 +70,7 @@ def generate_plots():
     with open(EVAL_FILE, "r") as f:
         results = json.load(f)
 
-    # --- NEW: Create a quick lookup dictionary for the algorithms ---
+    # --- Create a quick lookup dictionary for the algorithms ---
     algo_map = {cfg.env_id: cfg.algo for cfg in ENVIRONMENTS}
 
     for env_id, data in results.items():

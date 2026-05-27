@@ -22,6 +22,8 @@ rlhf/
 ├── aggregate_efficiency.py  # Merge timing files → efficiency_results.json
 ├── run_efficiency_experiment.py  # Single entry point: runs all five stages in sequence
 ├── run_beta_ablation.py     # Sweeps BETA values (run after the main pipeline)
+├── plot_beta_ablation.py    # Generates per-env ablation comparison plots
+├── generate_lr_comparison_plot.py  # Diagnostic: lr=3e-4 vs lr=3e-5 convergence comparison
 └── outputs/
     ├── reward_models/            # Phase 1 weights (.pth)
     ├── ppo_rlhf_results/beta*/  # Phase 2 policy checkpoints (.zip)
@@ -95,7 +97,7 @@ Evaluates expert baselines, mid-policy baselines, and all fine-tuned policies ov
 python evaluate_results.py
 ```
 
-Output: `outputs/evaluation_results/beta{BETA}/results_{env}.json`
+Output: `outputs/evaluation_results/beta{BETA}/evaluation_results_beta{BETA}.json`
 
 ### Stage 5 — Plot Results
 
@@ -206,7 +208,7 @@ Mean return ± std over 5 seeds for β ∈ {0.01, 0.1, 0.5, 2.0}:
 | 0.5  | 500.0 ± 0.0  | 496.1 ± 5.6  | 500.0 ± 0.0  |
 | 2.0  | 386.1 ± 20.3 | 382.8 ± 42.2 | 368.6 ± 18.3 |
 
-**Pendulum-v1** (expert ≈ −150, mid ≈ −650)
+**Pendulum-v1** (expert ≈ −267, mid ≈ −650)
 
 | β    | K=50           | K=200          | K=1000         |
 |------|----------------|----------------|----------------|
@@ -234,12 +236,12 @@ Scaling plots for all four β values:
 
 **β = 2.0 — too large.** The KL penalty dominates the reward signal, preventing the
 policy from meaningfully departing from the reference π₂. CartPole stalls at ~380
-(well below the 500 ceiling), Pendulum collapses to ~−580 (worse than the mid anchor),
+(well below the 500 ceiling), Pendulum improves only marginally over the mid anchor (~−580 vs. mid ~−630),
 and MountainCar is catastrophically unstable (std ≈ 75): with a hard KL constraint,
 whether the policy escapes the sparse-reward local optimum becomes entirely seed-dependent.
 
 **β = 0.5 — too large for Pendulum.** While CartPole and MountainCar are largely
-unaffected, Pendulum degrades steadily (−328 / −347 / −286 vs. expert −150). The
+unaffected, Pendulum degrades steadily (−328 / −347 / −286 for K=50/200/1000, vs. expert ≈ −267). The
 stronger penalty prevents the policy from optimising the continuous reward signal
 efficiently.
 
