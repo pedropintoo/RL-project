@@ -7,6 +7,14 @@ The pipeline measures how performance and computational cost scale with the numb
 of preference pairs (K ∈ {50, 200, 1000}) across three environments:
 CartPole-v1, Pendulum-v1, and MountainCarContinuous-v0.
 
+## Prerequisites
+
+Install dependencies from the root of the repository before running any script here:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Repository Structure
 
 ```text
