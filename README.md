@@ -52,7 +52,14 @@ Each module is self-contained and communicates with the others only through shar
 
 ## Getting Started
 
-Run the three stages in order:
+**0. Set up the environment**
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Then run the three stages in order:
 
 **1. Generate preference data**
 ```bash
