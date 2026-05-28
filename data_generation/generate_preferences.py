@@ -4,19 +4,15 @@ Build preference datasets from the trained pi_1 and pi_2 policies.
 Pipeline per environment and per dataset size K:
   1. Load pi_1 (expert) and pi_2 (mid) from disk.
   2. Roll out K trajectories with each policy (stochastic actions, so that
-     two rollouts of the same policy are not identical — this matters for
-     DPO/PPO-RLHF to see some intra-policy variance).
-  3. Form K pairs by zipping (tau_1[i], tau_2[i]).
+     two rollouts of the same policy are not identical, matters for
+     DPO/PPO-RLHF to have some intra-policy variance).
+  3. Form K pairs: (tau_1[i], tau_2[i]).
   4. For each pair, label the preferred trajectory by sampling from the
      Bradley-Terry distribution
-           p(tau_1 preferred) = exp(R(tau_1)) / (exp(R(tau_1)) + exp(R(tau_2))).
-     Implemented as sigmoid(R_1 - R_2) for numerical stability.
   5. Dump everything to JSON (full data) and CSV (summary).
 
-We generate each K independently rather than taking prefixes of the largest
-K, because this makes the seed handling explicit and easy to iterate
-on a small K without touching the large one. For monotonic subsets,
-shuffle / truncate the K=max JSON instead.
+We generate each K independently rather than taking subsets of the largest
+K.
 """
 
 from __future__ import annotations

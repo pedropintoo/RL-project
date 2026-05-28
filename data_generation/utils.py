@@ -1,5 +1,5 @@
 """
-Shared helpers for rollouts, serialization, and Bradley-Terry labeling.
+Shared helpers for rollouts, serialization and Bradley-Terry labeling.
 """
 
 from __future__ import annotations
@@ -11,9 +11,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 
 
-# ---------------------------------------------------------------------------
 # Trajectory rollout
-# ---------------------------------------------------------------------------
 def rollout_trajectory(env, policy, deterministic: bool = False) -> Dict[str, Any]:
     """Run one episode and return the full (state, action, reward) sequence.
 
@@ -48,9 +46,7 @@ def rollout_trajectory(env, policy, deterministic: bool = False) -> Dict[str, An
     }
 
 
-# ---------------------------------------------------------------------------
 # Bradley-Terry preference labeling
-# ---------------------------------------------------------------------------
 def bradley_terry_probability(r1: float, r2: float) -> float:
     """P(tau_1 preferred over tau_2) = exp(r1) / (exp(r1) + exp(r2)).
 
@@ -79,9 +75,7 @@ def sample_preference(r1: float, r2: float, rng: np.random.Generator) -> Tuple[i
     return preferred, p_tau1
 
 
-# ---------------------------------------------------------------------------
 # Serialization
-# ---------------------------------------------------------------------------
 def save_json(data: Dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:

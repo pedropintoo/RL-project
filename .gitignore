@@ -4,3 +4,4 @@ rlhf/.DS_Store
 rlhf/outputs/.DS_Store
 rlhf/outputs/plots/.DS_Store
 overleaf/
+data_generation/__pycache__/

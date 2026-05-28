@@ -2,17 +2,10 @@
 Train the expert (pi_1) and mid-performing (pi_2) policies.
 
 For each environment in `config.ENVIRONMENTS`:
-  1. Train a single PPO agent end-to-end (this becomes pi_1).
-  2. During training, an `EvalCallback` periodically evaluates the policy.
-     A custom `MidCheckpointCallback` watches those evaluations and, the
+  1. Train a single PPO/SAC agent end-to-end (this becomes pi_1).
+  2. During training, an `EvalCallback` periodically evaluates the policy, the
      first time the mean return crosses the halfway mark between random
      and expert performance, dumps the current weights as pi_2.
-
-Only one training run is needed because:
-  - It guarantees pi_2 and pi_1 live on the *same learning trajectory*, so
-    pi_2 is a "less trained" version of pi_1 rather than a
-    different algorithm, to match the project description.
-  - Halves compute.
 
 Outputs land in `outputs/policies/<ENV_ID>_{expert,mid}.zip`.
 """
