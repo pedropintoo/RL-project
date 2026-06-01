@@ -43,7 +43,8 @@ RL-project/
 ├── data_generation/   # Step 0 — train policies and generate preference datasets
 ├── rlhf/              # Reward model training, PPO/SAC-RLHF fine-tuning, evaluation
 ├── dpo/               # DPO training directly from preference pairs
-└── docs/              # Submitted poster and final report
+├── docs/              # Submitted poster and final report
+└── assets/            # Images used in this README
 ```
 
 Each module is self-contained and communicates with the others only through shared data artifacts in `data_generation/outputs/`.
